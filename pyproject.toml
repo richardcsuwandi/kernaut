@@ -1,0 +1,56 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kernaut"
+version = "0.1.0"
+description = "Kernaut: verified autoresearch for open-ended Gaussian-process kernel discovery"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [{name = "Richard Cornelius Suwandi"}]
+maintainers = [{name = "Richard Cornelius Suwandi"}]
+keywords = ["gaussian-process", "kernel", "program-synthesis", "llm", "verification"]
+dependencies = [
+  "numpy>=1.26,<2.3",
+  "openai>=1.50",
+  "pydantic>=2.7",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.40"]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.11,<2"]
+
+[project.urls]
+Homepage = "https://github.com/richardcsuwandi/kernaut"
+Repository = "https://github.com/richardcsuwandi/kernaut"
+Issues = "https://github.com/richardcsuwandi/kernaut/issues"
+Documentation = "https://github.com/richardcsuwandi/kernaut/tree/main/docs"
+
+[project.scripts]
+kernaut = "kernaut.cli:main"
+kernaut-viz = "kernaut.viz.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kernaut"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/kernaut", "tests", "examples", "configs", "README.md", "LICENSE", "CITATION.cff", "CONTRIBUTING.md", "SECURITY.md", "docs", "assets", ".env.example", "uv.lock"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["kernaut"]
+warn_unused_ignores = true

@@ -1,0 +1,13 @@
+{
+  "name": "dual_warp_fold_transform",
+  "contract": "input_transform",
+  "source": "import numpy as np\n\ndef transform_point(x, parameters):\n    \"\"\"\n    Dimension-agnostic input transform that maps x ∈ [0,1]^d to a 2d-dimensional\n    feature vector combining a monotone exponential warp and a smooth sinusoidal fold.\n\n    Branch 1 (warp): T_i = (1 - exp(-λ * x_i)) / (1 - exp(-λ))\n      A learnable monotone warping that compresses or expands the input domain.\n      When λ → 0, this reduces to the identity. When λ → ∞, it saturates like a step.\n\n    Branch 2 (fold): T_{d+i} = (1/π) * arcsin(sin(π * κ * x_i)) * sin(φ)\n      A triangular-wave projection with frequency κ and phase φ.\n      Creates controlled folding of the input domain, injecting multi-scale\n      periodic structure that interacts with the warp through the shared base kernel.\n\n    Parameters (all per-coordinate identical, dimension-agnostic):\n      warp_rate (λ): strength of the monotone domain compression\n      fold_frequency (κ): number of full triangular-wave cycles across [0,1]\n      fold_phase (φ): phase offset controlling the amplitude of the fold branch\n      base_lengthscale: lengthscale for the trusted Matérn-5/2 base kernel\n    \"\"\"\n    x = np.asarray(x, dtype=float).ravel()\n    d = x.shape[0]\n\n    warp_rate = float(parameters[\"warp_rate\"])\n    fold_frequency = float(parameters[\"fold_frequency\"])\n    fold_phase = float(parameters[\"fold_phase\"])\n\n    # Branch 1: Monotone exponential warp\n    if abs(warp_rate) < 1e-10:\n        warp = x.copy()\n    else:\n        warp = (1.0 - np.exp(-warp_rate * x)) / (1.0 - np.exp(-warp_rate))\n\n    # Branch 2: Smooth sinusoidal fold (triangular wave via arcsin(sin))\n    fold = (1.0 / np.pi) * np.arcsin(np.sin(np.pi * fold_frequency * x)) * np.sin(fold_phase)\n\n    result = np.concatenate([warp, fold])\n    return result",
+  "parameters": {
+    "base_lengthscale": 0.6206048333576044,
+    "fold_frequency": 0.9753086419753086,
+    "fold_phase": 1.4325662500369458,
+    "warp_rate": 0.21496191186014413
+  },
+  "parents": [],
+  "rationale": "An input transform with exponential warp and sinusoidal fold features, composed with a Matérn-5/2 base kernel."
+}

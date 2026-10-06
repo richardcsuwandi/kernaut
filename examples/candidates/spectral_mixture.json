@@ -1,0 +1,8 @@
+{
+  "name": "sparse_multiband_spectrum",
+  "contract": "spectral",
+  "source": "import numpy as np\n\ndef spectral_components(input_dimension, parameters):\n    bands = int(parameters.get('bands', 6))\n    frequencies = np.zeros((bands, input_dimension))\n    for j in range(bands):\n        frequencies[j, j % input_dimension] = (j + 1) / bands\n    raw_weights = 1.0 / (1.0 + np.arange(bands))\n    return frequencies, raw_weights\n",
+  "parameters": {"bands": 6},
+  "parents": [],
+  "rationale": "Sparse nonuniform frequency bands; the trusted wrapper squares raw weights."
+}

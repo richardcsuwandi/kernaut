@@ -1,0 +1,17 @@
+# OpenAI API. Reads the key from OPENAI_API_KEY (set in .env or the environment).
+[llm]
+provider = "openai"
+model = "gpt-5.1"
+timeout_seconds = 180.0
+max_retries = 4
+
+[campaign]
+max_rounds = 20
+max_tool_calls = 100
+seed = 0
+
+[execution]
+timeout_seconds = 20.0
+memory_mb = 1024
+cpu_seconds = 15
+max_output_bytes = 1000000

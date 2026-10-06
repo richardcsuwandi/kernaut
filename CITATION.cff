@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use Kernaut, please cite the accompanying preprint."
+title: "Kernaut: Kernel Autoresearch"
+type: software
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/richardcsuwandi/kernaut"
+authors:
+  - family-names: Suwandi
+    given-names: Richard Cornelius
+preferred-citation:
+  type: generic
+  title: "Kernel Autoresearch for Open-Ended Model Discovery"
+  authors:
+    - family-names: Suwandi
+      given-names: Richard Cornelius
+    - family-names: Yin
+      given-names: Feng
+    - family-names: Murphy
+      given-names: Kevin
+  year: 2026
+  notes: "Preprint."

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kernaut-example-extension"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = ["kernaut>=0.1.0"]
+
+[project.entry-points."kernaut.tasks"]
+sine = "kernaut_example:make_task"
+
+[project.entry-points."kernaut.models"]
+offline-demo = "kernaut_example:make_model"
+
+[project.entry-points."kernaut.baselines"]
+linear-demo = "kernaut_example:make_baselines"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kernaut_example"]

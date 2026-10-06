@@ -1,0 +1,21 @@
+[llm]
+provider = "openai-compatible"
+model = "Qwen/Qwen3.8-Max"
+base_url = "https://api-inference.modelscope.ai/v1"
+api_key_env = "MODELSCOPE_API_KEY"
+timeout_seconds = 180.0
+max_retries = 4
+
+[llm.extra_body]
+enable_thinking = false
+
+[campaign]
+max_rounds = 20
+max_tool_calls = 100
+seed = 0
+
+[execution]
+timeout_seconds = 20.0
+memory_mb = 1024
+cpu_seconds = 15
+max_output_bytes = 1000000

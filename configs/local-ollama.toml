@@ -1,0 +1,18 @@
+[llm]
+provider = "openai-compatible"
+model = "qwen3-coder"
+base_url = "http://localhost:11434/v1"
+api_key_env = ""
+timeout_seconds = 180.0
+max_retries = 2
+
+[campaign]
+max_rounds = 20
+max_tool_calls = 100
+seed = 0
+
+[execution]
+timeout_seconds = 20.0
+memory_mb = 1024
+cpu_seconds = 15
+max_output_bytes = 1000000

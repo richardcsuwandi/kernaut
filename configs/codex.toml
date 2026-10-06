@@ -1,0 +1,17 @@
+[llm]
+# Uses your logged-in ChatGPT (codex login) subscription; no API key needed. Empty model = CLI default.
+provider = "codex"
+model = ""
+timeout_seconds = 600.0
+max_retries = 2
+
+[campaign]
+max_rounds = 20
+max_tool_calls = 100
+seed = 0
+
+[execution]
+timeout_seconds = 20.0
+memory_mb = 1024
+cpu_seconds = 15
+max_output_bytes = 1000000

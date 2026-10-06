@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" role="img" aria-labelledby="title description">
+  <title id="title">Kernaut logo</title>
+  <desc id="description">An astronaut helmet containing a glowing kernel curve, encircled by an orbit.</desc>
+
+  <defs>
+    <linearGradient id="space" x1="38" y1="34" x2="202" y2="206" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172554"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="visor" x1="80" y1="67" x2="165" y2="157" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#312E81"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="kernel" x1="88" y1="126" x2="168" y2="126" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3EE"/>
+      <stop offset="0.52" stop-color="#A78BFA"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <filter id="soft-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="visor-clip">
+      <rect x="78" y="62" width="92" height="96" rx="43"/>
+    </clipPath>
+    <style>
+      .wordmark { fill: #0f172a; }
+      .tagline { fill: #64748b; }
+      @media (prefers-color-scheme: dark) {
+        .wordmark { fill: #f8fafc; }
+        .tagline { fill: #94a3b8; }
+      }
+    </style>
+  </defs>
+
+  <!-- Deep-space badge -->
+  <circle cx="120" cy="120" r="92" fill="url(#space)"/>
+  <circle cx="120" cy="120" r="91" fill="none" stroke="#334155" stroke-width="2"/>
+  <circle cx="65" cy="63" r="2.5" fill="#E0F2FE"/>
+  <circle cx="183" cy="88" r="2" fill="#C4B5FD"/>
+  <path d="m173 43 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="#67E8F9"/>
+
+  <!-- Orbit: the path through unknown kernel space -->
+  <ellipse cx="120" cy="120" rx="108" ry="43" transform="rotate(-24 120 120)" fill="none" stroke="#8B5CF6" stroke-width="3" stroke-linecap="round" stroke-dasharray="126 22"/>
+  <circle cx="216" cy="71" r="7" fill="#22D3EE" stroke="#CFFAFE" stroke-width="3" filter="url(#soft-glow)"/>
+
+  <!-- Astronaut helmet -->
+  <path d="M66 113c0-37 22-64 55-64s55 27 55 64v48c0 15-12 27-27 27H93c-15 0-27-12-27-27v-48Z" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="4"/>
+  <path d="M57 111h11v45H57c-7 0-12-5-12-12v-21c0-7 5-12 12-12Zm119 0h8c7 0 12 5 12 12v21c0 7-5 12-12 12h-8v-45Z" fill="#CBD5E1"/>
+  <rect x="78" y="62" width="92" height="96" rx="43" fill="url(#visor)" stroke="#94A3B8" stroke-width="4"/>
+  <g clip-path="url(#visor-clip)">
+    <path d="M85 128h78" stroke="#334155" stroke-width="2" stroke-linecap="round"/>
+    <path d="M88 128c13 0 15-34 33-34s20 34 45 34" fill="none" stroke="url(#kernel)" stroke-width="5" stroke-linecap="round" filter="url(#soft-glow)"/>
+    <circle cx="121" cy="94" r="5" fill="#E0E7FF"/>
+    <path d="M93 77c13-12 35-15 54-5" fill="none" stroke="#FFFFFF" stroke-opacity=".18" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <path d="M83 184v-10h76v10" fill="none" stroke="#94A3B8" stroke-width="4"/>
+  <rect x="94" y="178" width="54" height="17" rx="8.5" fill="#E2E8F0" stroke="#94A3B8" stroke-width="3"/>
+
+  <!-- Wordmark -->
+  <text class="wordmark" x="252" y="125" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="78" font-weight="750" letter-spacing="-3">kernaut</text>
+  <text class="tagline" x="257" y="164" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="19" font-weight="600" letter-spacing="3.3">KERNEL AUTORESEARCH</text>
+</svg>

@@ -1,0 +1,8 @@
+[llm]
+provider = "offline-demo"
+model = "fixed-candidate"
+
+[campaign]
+max_rounds = 4
+max_tool_calls = 4
+seed = 0

@@ -1,0 +1,21 @@
+# Mix providers in one Thompson-sampled ensemble. Each member names its own provider.
+[[ensemble]]
+provider = "openrouter"
+model = "qwen/qwen3-coder"
+weight = 0.5
+
+[[ensemble]]
+provider = "anthropic"
+model = "claude-sonnet-5"
+weight = 0.5
+
+[campaign]
+max_rounds = 20
+max_tool_calls = 100
+seed = 0
+
+[execution]
+timeout_seconds = 20.0
+memory_mb = 1024
+cpu_seconds = 15
+max_output_bytes = 1000000

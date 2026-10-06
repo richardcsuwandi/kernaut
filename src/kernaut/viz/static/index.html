@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Kernaut · Archive</title>
+  <script>
+    const savedTheme = localStorage.getItem("kernaut-theme");
+    document.documentElement.dataset.theme = savedTheme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  </script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <header class="brandbar">
+        <a class="wordmark" href="#">Kernaut</a>
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Switch color theme" title="Switch color theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.1A8.5 8.5 0 0 1 8.9 4a8.5 8.5 0 1 0 11.1 11.1Z"/></svg>
+        </button>
+      </header>
+
+      <section class="rail">
+        <div class="rail-head">
+          <div>
+            <h2>Candidates</h2>
+            <span id="candidate-count" class="muted"></span>
+          </div>
+          <button id="best-filter" class="filter-chip" type="button" title="Show starred candidates only">★ Best</button>
+        </div>
+        <label class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="search" type="search" placeholder="Search candidates…">
+        </label>
+        <div id="candidate-list" class="candidate-list"></div>
+      </section>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="workspace-heading">
+          <div class="archive-label"><span id="live-dot" class="live-dot"></span><span id="sync-label">Connecting</span></div>
+          <h1>Kernel program archive</h1>
+          <code id="archive-path">—</code>
+        </div>
+        <button id="refresh" class="quiet-button" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5"/><path d="M6.1 9a7 7 0 0 1 11.8-2.2L20 9M4 15l2.1 2.2A7 7 0 0 0 17.9 15"/></svg>
+          Refresh
+        </button>
+      </header>
+
+      <nav class="tabs" aria-label="Viewer sections">
+        <button class="tab active" data-tab="candidate" type="button">Candidate</button>
+        <button class="tab" data-tab="verification" type="button">Verification</button>
+        <button class="tab" data-tab="landscape" type="button">Landscape</button>
+        <button class="tab" data-tab="progress" type="button">Progress</button>
+        <button class="tab" data-tab="trace" type="button">Run trace</button>
+      </nav>
+
+      <article class="content-card">
+        <div id="candidate-panel" class="panel"></div>
+        <div id="verification-panel" class="panel hidden"></div>
+        <div id="landscape-panel" class="panel hidden"></div>
+        <div id="progress-panel" class="panel hidden"></div>
+        <div id="trace-panel" class="panel hidden"></div>
+      </article>
+    </main>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
