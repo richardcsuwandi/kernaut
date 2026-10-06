@@ -110,7 +110,7 @@ Accompanies **Kernel Autoresearch for Open-Ended Model Discovery**, by
 }
 ```
 
-See [references and benchmark attribution](docs/references.md) for DiscoGen, Gaussian processes, scoring rules, and the external benchmark sources.
+See [references and benchmark attribution](docs/references.md) for DiscoGen, CRPS, and the benchmark sources.
 
 [Citation metadata](CITATION.cff) | [MIT license](LICENSE) |
 [Greenhouse data attribution](src/kernaut/data/greenhouse/SOURCE.md)

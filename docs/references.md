@@ -12,7 +12,7 @@ Goldie, Alexander D., et al. (2026).
 
 DiscoGen provides procedural tasks for algorithm discovery and an evaluation framework that separates discovery from generalization assessment.
 Kernaut adopts this meta-evaluation perspective. Its adapters define the specific partitions documented in the [protocol guide](meta-evaluation.md).
-The [DiscoGen repository](https://github.com/AlexGoldie/discogen) also informed the organization of this documentation.
+See the [DiscoGen repository](https://github.com/AlexGoldie/discogen) for its task-generation code.
 
 ```bibtex
 @misc{goldie2026discogen,
@@ -32,14 +32,6 @@ The [DiscoGen repository](https://github.com/AlexGoldie/discogen) also informed 
 }
 ```
 
-## Gaussian processes
-
-Rasmussen, Carl Edward, and Williams, Christopher K. I. (2006).
-*Gaussian Processes for Machine Learning.* MIT Press.
-[Book and online text](https://gaussianprocess.org/gpml/).
-
-This reference describes Gaussian process regression, covariance functions, and marginal-likelihood-based parameter fitting.
-
 ## Probabilistic scoring
 
 Gneiting, Tilmann, and Raftery, Adrian E. (2007).
@@ -47,8 +39,8 @@ Gneiting, Tilmann, and Raftery, Adrian E. (2007).
 *Journal of the American Statistical Association*, 102(477), 359–378.
 [DOI: 10.1198/016214506000001437](https://doi.org/10.1198/016214506000001437).
 
-This reference provides the scoring-rule background for CRPS.
-Kernaut reports CRPS as a loss and uses its negative in predictive search scores.
+The continuous ranked probability score (CRPS) measures predictive-distribution error. Lower values are better.
+Kernaut uses negative CRPS in predictive search scores.
 
 ## ChemBench
 
