@@ -30,7 +30,7 @@ The [meta-evaluation protocol](meta-evaluation.md) tests whether discovered indu
 | Benchmark or task | Purpose |
 | --- | --- |
 | [Black-box optimization](tasks.md#black-box-optimization) | Evaluate prediction and optimization on transformed analytic functions |
-| [Greenhouse-gas forecasting](tasks.md#greenhouse-gas-forecasting) | Evaluate forecasts across NOAA gas records, including held-out SF6 |
+| [Greenhouse-gas forecasting](tasks.md#greenhouse-gas-forecasting) | Evaluate transfer across NOAA gas records. The paper tests SF6, CFC-12, and CFC-11. The package includes SF6 testing |
 | [ChemBench enzyme kinetics](tasks.md#chembench-enzyme-kinetics) | Evaluate transfer from canonical rate-law mechanisms to distinct held-out mechanisms |
 | [GlucoseBench forecasting](tasks.md#glucosebench-forecasting) | Evaluate kernel transfer across simulated patient groups |
 | [User-supplied regression](your-problem.md) | Search on observations supplied as an input matrix and target vector |

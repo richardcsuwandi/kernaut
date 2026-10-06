@@ -76,5 +76,6 @@ NOAA Global Monitoring Laboratory. *Trends in Atmospheric Greenhouse Gases.*
 [Data portal](https://gml.noaa.gov/ccgg/trends/).
 
 The package includes monthly global mean records for CO2, CH4, N2O, and SF6.
+The paper also evaluates CFC-12 and CFC-11 from the [NOAA HATS program](https://gml.noaa.gov/hats/). Those two records are not bundled.
 Consult the bundled [source and processing notes](https://github.com/richardcsuwandi/kernaut/blob/main/src/kernaut/data/greenhouse/SOURCE.md)
 and the source-specific citation instructions when using these observations.

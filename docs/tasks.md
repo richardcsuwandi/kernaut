@@ -20,7 +20,9 @@ Bayesian optimization evaluation reports regret over a sequence of queries and f
 | Meta-validation | The same five families with separate episode seeds |
 | Meta-test | Bukin (2), Drop-Wave (2), Griewank (5), Hölder Table (2), Rosenbrock (6), Rastrigin (6) |
 
+Each predictive episode uses `8 + 2d` fitting observations and 32 query points, where `d` is the observed dimension.
 Nuisance dimensions can increase the observed input dimension to at most eight.
+The paper uses ten episodes per family for validation and testing, giving 50 and 60 tasks respectively. Set `--episodes-per-family 10` for those counts.
 The functions are generated locally and require no external dataset.
 
 ```bash
@@ -38,7 +40,10 @@ See [Goldie et al. (2026)](references.md#discogen-and-meta-evaluation) for the r
 ## Greenhouse-gas forecasting
 
 This benchmark uses bundled monthly global mean records from the NOAA Global Monitoring Laboratory.
-Meta-training and meta-validation use CO2, CH4, and N2O. Meta-test uses SF6.
+Meta-training and meta-validation use CO2, CH4, and N2O.
+The paper tests SF6, CFC-12, and CFC-11. The CFC records come from NOAA HATS and test transfer to records that rise and then decline.
+The package bundles CO2, CH4, N2O, and SF6. Its test command currently evaluates SF6 only.
+CFC-12 and CFC-11 require additional records and an extended evaluator.
 Each episode fits a prefix and predicts a subsequent window in the episode's sequence.
 The default forecast horizon is 48 months, with at least 216 training months.
 
@@ -54,6 +59,7 @@ kernaut ts-benchmark --archive runs/forecast/archive.sqlite \
 ```
 
 Reports include CRPS, NLPD, and RMSE. The search score is negative mean CRPS, with an optional novelty penalty.
+The paper evaluates 30 windows per held-out record. The command default is one episode per family.
 See the [NOAA source and data attribution](references.md#noaa-greenhouse-gas-records).
 
 ## ChemBench enzyme kinetics
@@ -83,6 +89,7 @@ kernaut chem-benchmark --chembench-root ../LLM-AutoSciLab \
 ```
 
 Reports include CRPS, NLPD, RMSE, and failures by episode.
+The paper uses 15 test episodes per mechanism, giving 75 episodes. Set `--episodes-per-domain 15` for that count.
 `--test-points` specifies held-out observations within each episode, including meta-training episodes.
 It does not select the meta-test domains.
 `--difficulty`, `--noise-level`, and `--worst-domain-weight` configure the oracle and score. See the [configuration table](meta-evaluation.md#configuration).

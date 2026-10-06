@@ -19,7 +19,7 @@ Meta-training, meta-validation, and meta-test splits assess whether discovered i
 
 ## Interactive archive example
 
-The documentation includes a [guided archive viewer](docs/visualize.md).
+The documentation includes a [guided archive viewer](https://richardcsuwandi.github.io/kernaut/visualize/).
 Select candidates and chart markers, inspect verification evidence, and follow the recorded discovery history.
 The example contains 19 evaluated candidates from a historical meta-training run, including the dual warp–fold (DWF) kernel.
 It displays fixed results without running candidate code or calling a model provider.
@@ -55,7 +55,7 @@ For model-generated proposals, [configure a model provider](docs/getting-started
 | Benchmark or task | Evaluation scope | Interface |
 | --- | --- | --- |
 | Black-box optimization | Predictive accuracy and Bayesian optimization on transformed analytic functions, with six held-out function families | [`meta-run`, `meta-benchmark`](docs/tasks.md#black-box-optimization) |
-| Greenhouse-gas forecasting | Forecasts of NOAA CO2, CH4, and N2O records, with SF6 reserved as the held-out gas family | [`ts-run`, `ts-benchmark`](docs/tasks.md#greenhouse-gas-forecasting) |
+| Greenhouse-gas forecasting | Transfer from CO2, CH4, and N2O to held-out records. The paper tests SF6, CFC-12, and CFC-11. The package includes SF6 testing | [`ts-run`, `ts-benchmark`](docs/tasks.md#greenhouse-gas-forecasting) |
 | ChemBench enzyme kinetics | Reaction-rate prediction across ten training mechanism domains and five held-out domains | [`chem-run`, `chem-benchmark`](docs/tasks.md#chembench-enzyme-kinetics) |
 | GlucoseBench forecasting | Transfer across simulated patient groups. Local search uses children and validation uses adolescents. Hidden adult testing requires the external evaluator | [`glucose-run`, `glucose-benchmark`](docs/tasks.md#glucosebench-forecasting) |
 | User-supplied regression | Gaussian process marginal likelihood on a JSON dataset. Users define separate validation and test evaluations | [`run`](docs/your-problem.md) |

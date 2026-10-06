@@ -20,6 +20,20 @@ The dashboard labels reference candidates `BASE`.
 A positive **Vs best baseline** value means that the selected candidate scored higher than the best stored baseline in that archive.
 Read this value using the task's scoring rule. It is not a significance test.
 
+## Comparisons in the paper
+
+The paper also evaluates learned and domain-specific references:
+
+| Benchmark | Additional comparisons |
+| --- | --- |
+| Black-box optimization | FSBO, fitted input warping, grid spectral mixtures, compositional kernel search (CKS), and CAKE |
+| Forecasting | Fitted input warping, grid spectral mixtures, CKS, CAKE, and AutoGP |
+| ChemBench | Optimized ARD, input warping, two deep-kernel architectures, and a domain-feature library |
+| GlucoseBench | Relative-time ARD Matérn, a physiological library, and per-patient marginal-likelihood fits |
+
+These comparisons have separate training and selection protocols in the paper.
+The package commands do not reproduce all of these baselines. Use the extension interface below for additional kernel programs.
+
 ## Add your own reference kernel
 
 A baseline extension is a small Python package that returns one or more `CandidateBundle` objects.
