@@ -1,4 +1,8 @@
-"""Lazy discovery of installed extensions using Python package entry points."""
+"""Find installed extensions from the names registered in Python package metadata.
+
+An extension package maps each name to a function that creates a task, model,
+or baseline. These mappings are called entry points.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +20,11 @@ def extension_names(group: str) -> tuple[str, ...]:
 
 
 def load_extension(group: str, name: str) -> Any:
-    """Load exactly one selected factory, rejecting ambiguous registrations."""
+    """Load the function registered for one selected extension name.
+
+    Report an error if no package or multiple packages register that name.
+    The returned function creates the selected task, model, or baseline.
+    """
     extension_names(group)
     matches = list(entry_points(group=group, name=name))
     if not matches:

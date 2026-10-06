@@ -31,10 +31,10 @@ class Dataset(BaseModel):
 
 
 class GaussianProcessEvaluator:
-    """Deterministic exact-GP marginal-likelihood evaluator.
+    """Evaluate exact Gaussian process (GP) marginal likelihood deterministically.
 
-    Noise is selected from a fixed grid, avoiding optimizer nondeterminism in
-    the harness. More elaborate fitters can be added behind this interface.
+    Select noise from a fixed grid to avoid nondeterminism from an optimizer.
+    Other fitting methods can implement the same evaluator interface.
     """
 
     def __init__(

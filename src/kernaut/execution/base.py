@@ -25,7 +25,7 @@ class ExecutionResult(BaseModel):
 
 
 class KernelExecutor(ABC):
-    """Execution seam; a future container backend implements this same interface."""
+    """Define the execution interface that a future container backend can also implement."""
 
     @abstractmethod
     def gram(self, candidate: CandidateBundle, x: NDArray[np.float64]) -> ExecutionResult:

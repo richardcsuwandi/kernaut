@@ -66,11 +66,12 @@ def required_entrypoint(contract: ContractKind) -> str:
 
 
 def validate_source_shape(source: str, contract: ContractKind) -> list[str]:
-    """Check the restricted certificate interface before isolated execution.
+    """Check the restricted certificate interface before running candidate code.
 
-    Certified point functions have no module-level state, decorators, closures, mutable
-    defaults, reflection, or randomness. The trusted interpreter supplies one copied point
-    and one copied parameter object per call and owns every PSD-preserving construction.
+    Certified point functions must have no module-level state, decorators, closures,
+    mutable defaults, reflection, or randomness. For each call, the trusted interpreter
+    supplies a copy of one point and one parameter object. The interpreter applies
+    all construction rules that preserve positive semidefiniteness (PSD).
     """
     try:
         tree = ast.parse(source)
@@ -345,8 +346,8 @@ def _evaluate_tree(node: Any, x: NDArray[np.float64]) -> NDArray[np.float64]:
         scales_raw = np.asarray(node.get("scales"), dtype=np.float64)
         if not np.all(np.isfinite(means_raw)) or not np.all(np.isfinite(scales_raw)):
             raise ValueError("spectral mixture parameters contain non-finite values")
-        means = means_raw.reshape(weights.size, -1)
-        scales = scales_raw.reshape(weights.size, -1)
+        means: NDArray[np.float64] = means_raw.reshape(weights.size, -1)
+        scales: NDArray[np.float64] = scales_raw.reshape(weights.size, -1)
         if means.shape[0] != weights.size or scales.shape[0] != weights.size:
             raise ValueError("one spectral mixture mean and scale are required per component")
         if means.shape[1] not in {1, x.shape[1]} or scales.shape[1] not in {1, x.shape[1]}:
@@ -355,8 +356,8 @@ def _evaluate_tree(node: Any, x: NDArray[np.float64]) -> NDArray[np.float64]:
         scales = np.broadcast_to(scales, (weights.size, x.shape[1]))
         if np.any(scales < 0):
             raise ValueError("spectral mixture scales must be nonnegative")
-        if float(weights.sum()) <= 0:
-            raise ValueError("spectral mixture weights must have positive mass")
+        if np.any(weights < 0) or float(weights.sum()) <= 0:
+            raise ValueError("spectral mixture weights must be nonnegative with positive mass")
         tau = x[:, None, :] - x[None, :, :]
         gram = np.zeros_like(sqdist)
         for weight, mean, scale in zip(weights, means, scales, strict=True):
@@ -366,9 +367,9 @@ def _evaluate_tree(node: Any, x: NDArray[np.float64]) -> NDArray[np.float64]:
             )
         return variance * gram
     if kind == "rff":
-        # Rahimi-Recht random Fourier features. Weights are drawn deterministically from a
-        # stored seed so the same candidate reproduces the same Gram at any input
-        # dimension; explicit omega/bias matrices are also accepted.
+        # Rahimi-Recht random Fourier features. A stored seed determines the sampled weights.
+        # For any input dimension, the same candidate reproduces the same Gram matrix.
+        # Explicit omega and bias matrices are also accepted.
         seed = int(node.get("seed", 0))
         features = int(node.get("features", 64))
         if features < 1:
@@ -376,7 +377,7 @@ def _evaluate_tree(node: Any, x: NDArray[np.float64]) -> NDArray[np.float64]:
         explicit_omega = node.get("omega")
         if explicit_omega is not None:
             omega = np.asarray(explicit_omega, dtype=np.float64)
-            bias = np.asarray(node.get("bias"), dtype=np.float64).reshape(-1)
+            bias: NDArray[np.float64] = np.asarray(node.get("bias"), dtype=np.float64).reshape(-1)
             if omega.ndim != 2 or omega.shape[1] != x.shape[1]:
                 raise ValueError("rff omega must have shape [features, input_dimension]")
             if bias.shape[0] != omega.shape[0]:

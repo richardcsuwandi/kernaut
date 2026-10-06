@@ -20,6 +20,7 @@ jobs:
       - run: pip install -e examples/extension
       - run: ruff check .
       - run: ruff format --check .
+      - run: mypy src/kernaut
       - run: pytest
       - run: kernaut task-run --task sine --config examples/extension/offline.toml --baseline linear-demo --archive runs/ci/archive.sqlite
   package:
@@ -33,5 +34,13 @@ jobs:
       - run: cffconvert --validate
       - run: python -m build
       - run: twine check dist/*
-      - run: pip install dist/*.whl
+      - run: pip install dist/*.whl pytest
+      - run: python -m build examples/extension --outdir extension-dist
+      - run: pip install extension-dist/*.whl
+      - run: pytest
       - run: kernaut verify examples/candidates/dual_warp_fold.json
+      - run: |
+          cd "$(mktemp -d)"
+          kernaut init demo
+          kernaut task-run --task sine --config "$GITHUB_WORKSPACE/examples/extension/offline.toml" --baseline linear-demo --archive archive.sqlite
+          kernaut inspect --archive archive.sqlite

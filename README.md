@@ -1,88 +1,105 @@
 <p align="center">
-  <img src="assets/kernaut-logo.svg" alt="Kernaut: Kernel Autoresearch" width="640">
+  <img src="assets/kernaut-logo.svg" alt="Kernaut: Kernel Autoresearch" width="720">
 </p>
 
-# Kernel Autoresearch (Kernaut)
+# Kernaut: Kernel Autoresearch
 
-**Discover kernel programs with coding agents and PSD-preserving construction contracts.**
+Kernels encode inductive biases: they determine which inputs a model treats as similar and which patterns it can learn.
+Kernaut treats kernel design as open-ended model discovery.
+Language models propose kernel programs, construction contracts govern their validity, and task evaluators measure their usefulness.
+An archive records each program, its parameters, verification evidence, and results.
 
-Kernaut lets language models propose kernel components while a deterministic backend verifies,
-evaluates, and archives them. Bring your own dataset or extend the package with new tasks,
-model providers, and baseline kernels.
+The framework targets methods that use positive semidefinite kernels, including kernel ridge regression, support vector machines, and Gaussian processes.
+The supplied evaluators use Gaussian processes. Other kernel methods require a task evaluator for their fitting and scoring rules.
+Meta-training, meta-validation, and meta-test splits assess whether discovered inductive biases transfer to unseen tasks.
 
-Accompanies **Kernel Autoresearch for Open-Ended Model Discovery**, by
-**Richard Cornelius Suwandi, Feng Yin, and Kevin Murphy**.
+[Installation](docs/getting-started.md) | [Benchmarks](docs/tasks.md) |
+[Meta-evaluation protocol](docs/meta-evaluation.md) | [Custom benchmarks](docs/custom-benchmarks.md) |
+[Archive visualization](docs/visualize.md)
 
-## Install
+## Interactive archive example
 
-Use Python 3.11 or later on macOS or Linux. From the repository root:
+The documentation includes a [guided archive viewer](docs/visualize.md).
+Select candidates and chart markers, inspect verification evidence, and follow the recorded discovery history.
+The example contains 19 evaluated candidates from a historical meta-training run, including the dual warp–fold (DWF) kernel.
+It displays fixed results without running candidate code or calling a model provider.
+
+See the [visualization guide](docs/visualize.md) for local preview instructions and interpretation.
+
+## Installation and offline example
+
+Use Python 3.11 or later on macOS or Linux:
 
 ```bash
+git clone https://github.com/richardcsuwandi/kernaut.git
+cd kernaut
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .
-```
-
-For development, install `.[dev]`. For the Anthropic API, install `.[anthropic]`.
-Windows has not been tested and lacks the worker's Unix resource limits.
-
-## Quick start
-
-Verify an example kernel without an API key:
-
-```bash
-kernaut verify examples/candidates/dual_warp_fold.json
-```
-
-To search with an LLM, copy `.env.example` to `.env`, set your provider key, and review the
-model name in the configuration. LLM-backed searches can incur provider charges.
-
-```bash
-kernaut run --config configs/openai.toml --context examples/task.md \
-  --data examples/data.json --archive runs/search/archive.sqlite
-kernaut inspect --archive runs/search/archive.sqlite
-kernaut viz --archive runs/search/archive.sqlite --open
-```
-
-The dataset is JSON with a matrix `x` and a vector `y`. The Markdown context describes your
-inputs and modeling goals. Use training data for search and reserve held-out data for evaluation.
-
-Configurations in [`configs/`](configs) cover OpenAI, Anthropic, OpenRouter, OpenAI-compatible
-servers, Ollama, Claude Code, and Codex. Use `mixed-ensemble.toml` to combine model providers.
-
-## Extend Kernaut
-
-Install a separate Python package that registers one or more extension groups:
-
-| Group | Adds |
-| --- | --- |
-| `kernaut.tasks` | Training data, domain context, and an evaluator |
-| `kernaut.models` | An LLM provider or agent adapter |
-| `kernaut.baselines` | Reference kernel programs |
-
-See the [extension guide](docs/extensions.md) and [installable example](examples/extension).
-Try a complete offline campaign with a fixed example model:
-
-```bash
 pip install -e examples/extension
-kernaut task-run --task sine --config examples/extension/offline.toml \
-  --baseline linear-demo --archive runs/offline/archive.sqlite
 ```
 
-The [task guide](docs/tasks.md) covers the built-in BBO, forecasting, enzyme-kinetics, and glucose
-adapters. Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and checks.
-The extension API is experimental and may change before version 1.0.
+Run the example and inspect its archive:
 
-## Verification
+```bash
+kernaut task-run --task sine --config examples/extension/offline.toml \
+  --baseline linear-demo --archive runs/demo/archive.sqlite
+kernaut viz --archive runs/demo/archive.sqlite --open
+```
 
-Only candidates that pass Tier 2 construction-contract checks enter the accepted archive.
-PSD validity follows from supported construction rules, conditional on a correct trusted
-interpreter. Numerical checks alone do not prove validity across all inputs.
+The example uses predefined model replies to verify and evaluate one candidate without an API key.
+For model-generated proposals, [configure a model provider](docs/getting-started.md#choose-a-model).
 
-Candidate subprocesses contain research failures but are not a hardened sandbox for hostile code.
-Installed extensions execute as trusted Python code. See [SECURITY.md](SECURITY.md).
+## Benchmarks and evaluation tasks
 
-## Citation
+| Benchmark or task | Evaluation scope | Interface |
+| --- | --- | --- |
+| Black-box optimization | Predictive accuracy and Bayesian optimization on transformed analytic functions, with six held-out function families | [`meta-run`, `meta-benchmark`](docs/tasks.md#black-box-optimization) |
+| Greenhouse-gas forecasting | Forecasts of NOAA CO2, CH4, and N2O records, with SF6 reserved as the held-out gas family | [`ts-run`, `ts-benchmark`](docs/tasks.md#greenhouse-gas-forecasting) |
+| ChemBench enzyme kinetics | Reaction-rate prediction across ten training mechanism domains and five held-out domains | [`chem-run`, `chem-benchmark`](docs/tasks.md#chembench-enzyme-kinetics) |
+| GlucoseBench forecasting | Transfer across simulated patient groups. Local search uses children and validation uses adolescents. Hidden adult testing requires the external evaluator | [`glucose-run`, `glucose-benchmark`](docs/tasks.md#glucosebench-forecasting) |
+| User-supplied regression | Gaussian process marginal likelihood on a JSON dataset. Users define separate validation and test evaluations | [`run`](docs/your-problem.md) |
+| Offline sine-wave example | A small integration example for tasks, model adapters, baselines, and verification | [`task-run`](docs/getting-started.md#run-without-an-api-key) |
+
+The [benchmark guide](docs/tasks.md) lists data requirements, metrics, task families, and commands.
+The [meta-evaluation guide](docs/meta-evaluation.md) explains split membership, episode generation, configuration, and candidate selection.
+This separation follows the evaluation framework discussed by [Goldie et al. (2026)](https://arxiv.org/abs/2603.17863).
+
+## Custom tasks and reference methods
+
+Provide training data as JSON and a task description in Markdown.
+After configuring a model provider, run:
+
+```bash
+kernaut run --config configs/openai.toml --context my-task.md \
+  --data my-data.json --archive runs/my-task/archive.sqlite
+```
+
+The default regression workflow tunes eight reference kernels before searching for new programs.
+Use a [task extension](docs/extensions.md#add-a-task-and-its-context) for another data loader or scoring rule.
+For evaluation across episodes, follow the [custom benchmark protocol](docs/custom-benchmarks.md).
+The [baseline guide](docs/baselines.md) explains how to add reference kernels and report comparable evaluation budgets.
+
+## Verification and inspection
+
+Kernaut accepts candidates that pass its Tier 2 construction-contract checks.
+The construction rules preserve positive semidefiniteness, the property required of a valid kernel.
+This guarantee depends on the trusted interpreter being correct. Numerical checks alone are not a proof for all inputs.
+
+The [visualizer](docs/visualize.md) connects candidate code to scores, verification evidence, and recorded agent conversations.
+Candidate processes limit execution failures but do not securely isolate hostile code.
+See the [verification guide](docs/verification.md) and [security policy](SECURITY.md).
+
+## Contributions
+
+Contributions can add benchmark tasks, reference kernels, model adapters, documentation, or corrections.
+Include a reproducible example, an explicit evaluation protocol, and tests that do not require provider credentials.
+See the [contribution guide](CONTRIBUTING.md).
+
+## Paper and citation
+
+Accompanies **Kernel Autoresearch for Open-Ended Model Discovery**, by
+**Richard Cornelius Suwandi, Feng Yin, and Kevin Murphy**.
 
 ```bibtex
 @misc{suwandi2026kernaut,
@@ -93,9 +110,7 @@ Installed extensions execute as trusted Python code. See [SECURITY.md](SECURITY.
 }
 ```
 
-Machine-readable metadata: [CITATION.cff](CITATION.cff).
+See [references and benchmark attribution](docs/references.md) for DiscoGen, Gaussian processes, scoring rules, and the external benchmark sources.
 
-## License
-
-[MIT](LICENSE). Bundled greenhouse data retain their [source attribution](src/kernaut/data/greenhouse/SOURCE.md).
-External benchmark packages retain their own licenses.
+[Citation metadata](CITATION.cff) | [MIT license](LICENSE) |
+[Greenhouse data attribution](src/kernaut/data/greenhouse/SOURCE.md)

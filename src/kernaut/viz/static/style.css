@@ -256,3 +256,7 @@ g[data-plot-id]:hover .plot-label { opacity: 1; }
   .evidence-summary { flex-wrap: wrap; gap: 9px 14px; padding: 7px 0; }
   .template-ref { width: 100%; margin-left: 0; }
 }
+
+g[data-plot-id]:focus-visible { outline: none; }
+g[data-plot-id]:focus-visible .point { stroke: var(--text); stroke-width: 3; }
+g[data-plot-id]:focus-visible .plot-label { opacity: 1; }

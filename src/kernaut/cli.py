@@ -11,6 +11,8 @@ from typing import Any, cast
 from dotenv import load_dotenv
 
 from kernaut.agent import EvolutionarySynthesisController, HarnessTools, SynthesisController
+from kernaut.agent.controller import CampaignResult
+from kernaut.agent.evolutionary import EvolutionResult
 from kernaut.archive import CandidateStore
 from kernaut.config import AppConfig, ExecutionConfig
 from kernaut.evaluation import (
@@ -47,21 +49,23 @@ def _positive_int(value: str) -> int:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="kernaut", description="Kernaut research harness")
+    parser = argparse.ArgumentParser(
+        prog="kernaut", description="Discover and evaluate kernel programs"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     init = sub.add_parser("init", help="Create an experiment workspace")
     init.add_argument("directory", type=Path)
     verify = sub.add_parser("verify", help="Verify a candidate bundle JSON file")
     verify.add_argument("candidate", type=Path)
     verify.add_argument("--config", type=Path)
-    run = sub.add_parser("run", help="Run an agent synthesis campaign")
+    run = sub.add_parser("run", help="Run a kernel search with a language model")
     run.add_argument("--config", type=Path, required=True)
     run.add_argument("--context", type=Path, required=True)
     run.add_argument("--data", type=Path, required=True)
     run.add_argument("--archive", type=Path, required=True)
     run.add_argument("--run-id")
     meta_run = sub.add_parser(
-        "meta-run", help="Evolve kernels across the procedural meta-BO training tasks"
+        "meta-run", help="Search for kernels across generated Bayesian optimization training tasks"
     )
     meta_run.add_argument("--config", type=Path, required=True)
     meta_run.add_argument("--context", type=Path, required=True)
@@ -71,10 +75,16 @@ def _parser() -> argparse.ArgumentParser:
         "--strategy",
         choices=["conversational", "evolutionary"],
         default="conversational",
-        help="Use one continuous agent conversation or quality-diverse evolutionary campaigns.",
+        help=(
+            "Use one model conversation, or repeated searches guided by an archive of "
+            "diverse candidates."
+        ),
     )
     meta_run.add_argument(
-        "--iterations", type=_positive_int, default=12, help="Evolutionary campaign count."
+        "--iterations",
+        type=_positive_int,
+        default=12,
+        help="Number of search campaigns in an evolutionary run.",
     )
     meta_run.add_argument(
         "--rounds-per-iteration",
@@ -95,11 +105,17 @@ def _parser() -> argparse.ArgumentParser:
         "--novelty-threshold",
         type=float,
         default=0.08,
-        help="Minimum mean normalized centered-Gram distance from familiar kernels",
+        help=(
+            "Minimum novelty distance from reference kernels, measured with normalized "
+            "centered Gram matrices"
+        ),
     )
     meta_benchmark = sub.add_parser(
         "meta-benchmark",
-        help="Evaluate frozen archived kernels on meta-train, validation, and held-out BO tasks",
+        help=(
+            "Evaluate fixed archived kernels on training, validation, and held-out "
+            "Bayesian optimization tasks"
+        ),
     )
     meta_benchmark.add_argument("--archive", type=Path, required=True)
     meta_benchmark.add_argument("--config", type=Path)
@@ -119,14 +135,12 @@ def _parser() -> argparse.ArgumentParser:
             "included. Without this option, recent accepted candidates are evaluated."
         ),
     )
-    baselines = sub.add_parser(
-        "baselines", help="Tune and archive the standard kernel reference baselines"
-    )
+    baselines = sub.add_parser("baselines", help="Tune and archive the standard reference kernels")
     baselines.add_argument("--data", type=Path, required=True)
     baselines.add_argument("--archive", type=Path, required=True)
     baselines.add_argument("--config", type=Path)
     ts_run = sub.add_parser(
-        "ts-run", help="Evolve kernels across greenhouse-gas forecasting episodes"
+        "ts-run", help="Search for kernels across greenhouse-gas forecasting episodes"
     )
     ts_run.add_argument("--config", type=Path, required=True)
     ts_run.add_argument("--context", type=Path, required=True)
@@ -136,10 +150,16 @@ def _parser() -> argparse.ArgumentParser:
         "--strategy",
         choices=["conversational", "evolutionary"],
         default="conversational",
-        help="Use one continuous agent conversation or quality-diverse evolutionary campaigns.",
+        help=(
+            "Use one model conversation, or repeated searches guided by an archive of "
+            "diverse candidates."
+        ),
     )
     ts_run.add_argument(
-        "--iterations", type=_positive_int, default=12, help="Evolutionary campaign count."
+        "--iterations",
+        type=_positive_int,
+        default=12,
+        help="Number of search campaigns in an evolutionary run.",
     )
     ts_run.add_argument(
         "--rounds-per-iteration",
@@ -160,11 +180,14 @@ def _parser() -> argparse.ArgumentParser:
         "--novelty-threshold",
         type=float,
         default=0.08,
-        help="Minimum mean normalized centered-Gram distance from familiar kernels",
+        help=(
+            "Minimum novelty distance from reference kernels, measured with normalized "
+            "centered Gram matrices"
+        ),
     )
     ts_benchmark = sub.add_parser(
         "ts-benchmark",
-        help="Evaluate frozen archived kernels on train, validation, and held-out gas series",
+        help="Evaluate fixed archived kernels on training, validation, and held-out gas series",
     )
     ts_benchmark.add_argument("--archive", type=Path, required=True)
     ts_benchmark.add_argument("--config", type=Path)
@@ -192,7 +215,7 @@ def _parser() -> argparse.ArgumentParser:
         ),
     )
     chem_run = sub.add_parser(
-        "chem-run", help="Evolve kernels on ChemBench enzyme-kinetics episodes"
+        "chem-run", help="Search for kernels on ChemBench enzyme-kinetics episodes"
     )
     chem_run.add_argument("--chembench-root", type=Path, required=True)
     chem_run.add_argument("--config", type=Path, required=True)
@@ -222,7 +245,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     chem_benchmark = sub.add_parser(
         "chem-benchmark",
-        help="Evaluate frozen kernels on ChemBench train/validation/test domains",
+        help="Evaluate fixed kernels on ChemBench training, validation, and test domains",
     )
     chem_benchmark.add_argument("--chembench-root", type=Path, required=True)
     chem_benchmark.add_argument("--archive", type=Path, required=True)
@@ -251,7 +274,10 @@ def _parser() -> argparse.ArgumentParser:
         help="Evaluate a candidate JSON directly (repeatable).",
     )
     glucose_run = sub.add_parser(
-        "glucose-run", help="Evolve kernels on GlucoseBench CGM forecasting (children)"
+        "glucose-run",
+        help=(
+            "Search for kernels to forecast continuous glucose monitor (CGM) readings for children"
+        ),
     )
     glucose_run.add_argument(
         "--data", type=Path, required=True, help="Output of examples/glucose/export_training.py"
@@ -282,21 +308,27 @@ def _parser() -> argparse.ArgumentParser:
     glucose_benchmark.add_argument("--split", choices=["all", "train", "validation"], default="all")
     glucose_benchmark.add_argument("--limit", type=_positive_int, default=100)
     glucose_benchmark.add_argument("--candidate-id", action="append", default=[])
-    inspect = sub.add_parser("inspect", help="Inspect candidates or the Pareto frontier")
+    inspect = sub.add_parser(
+        "inspect", help="Inspect candidates or those on the quality-cost Pareto frontier"
+    )
     inspect.add_argument("--archive", type=Path, required=True)
     inspect.add_argument("--frontier", action="store_true")
     inspect.add_argument("--limit", type=int, default=20)
-    extensions = sub.add_parser("extensions", help="List installed extension names")
+    extensions = sub.add_parser(
+        "extensions", help="List installed task, model, and baseline extensions"
+    )
     extensions.add_argument("--group", choices=["tasks", "models", "baselines"])
     task_run = sub.add_parser("task-run", help="Run a task from an installed extension")
     task_run.add_argument("--task", required=True)
     task_run.add_argument("--options", type=Path, help="Task options as a JSON object")
     task_run.add_argument("--config", type=Path, required=True)
     task_run.add_argument("--archive", type=Path, required=True)
-    task_run.add_argument("--context", type=Path, help="Override the task's proposer context")
+    task_run.add_argument(
+        "--context", type=Path, help="Replace the task description sent to the model"
+    )
     task_run.add_argument("--baseline", action="append", default=[])
     task_run.add_argument("--run-id")
-    viz = sub.add_parser("viz", help="Open the local archive viewer")
+    viz = sub.add_parser("viz", help="Open the local dashboard for an archive")
     viz.add_argument("--archive", type=Path, required=True)
     viz.add_argument("--host", default="127.0.0.1")
     viz.add_argument("--port", type=int, default=8765)
@@ -401,6 +433,7 @@ def _launch_campaign(
     effective_tool_calls = (
         max_tool_calls if max_tool_calls is not None else config.campaign.max_tool_calls
     )
+    result: CampaignResult | EvolutionResult
     if strategy == "evolutionary":
         result = EvolutionarySynthesisController(
             model,
@@ -426,9 +459,9 @@ def _launch_campaign(
 def _forecast_execution_config(execution: ExecutionConfig) -> ExecutionConfig:
     """Allow larger worker responses for forecasting episodes.
 
-    Forecasting evaluates up to roughly 570 monthly points at once, so the trusted
-    worker must transport Gram matrices far larger than the interactive default. The
-    candidate stdout/stderr caps inside the worker are unchanged.
+    Forecasting evaluates up to approximately 570 monthly points at once. The worker
+    must return Gram matrices that exceed the default response size. The limits on
+    candidate stdout and stderr remain unchanged.
     """
     minimum_bytes = 8 * 1024 * 1024
     if execution.max_output_bytes >= minimum_bytes:

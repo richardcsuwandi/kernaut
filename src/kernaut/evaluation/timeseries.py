@@ -1,10 +1,10 @@
-"""Greenhouse-gas forecasting benchmark over bundled NOAA GML monthly means.
+"""Evaluate greenhouse-gas forecasts using bundled NOAA GML monthly means.
 
-Each family is one gas record (global monthly mean CO2, CH4, N2O, SF6). An episode
-standardizes a training window of monthly values and forecasts a fixed horizon of
-held-out months inside the normalized record span, so every input lives in [0, 1].
-The predictive fitness is negative mean held-out CRPS, reusing the meta-BO scoring
-helpers so both benchmarks remain directly comparable.
+Each task family uses one gas record: global monthly mean CO2, CH4, N2O, or SF6.
+An episode standardizes a training window and forecasts a fixed number of held-out
+months. The record's time span is normalized, so all inputs lie in [0, 1].
+The score is negative mean held-out continuous ranked probability score (CRPS).
+Shared scoring helpers make this benchmark directly comparable to the meta-BO benchmark.
 """
 
 from __future__ import annotations
@@ -55,7 +55,7 @@ class GasSeries:
 
 
 def load_gas_series(gas: str) -> GasSeries:
-    """Load one bundled series; values are unmodified NOAA monthly means."""
+    """Load a bundled series of unmodified NOAA monthly means."""
     if gas not in SERIES_FILES:
         raise ValueError(f"unknown gas {gas!r}; expected one of {sorted(SERIES_FILES)}")
     text = resources.files("kernaut").joinpath(GAS_DATA_DIR, f"{gas}.csv").read_text()
@@ -73,7 +73,7 @@ def load_gas_series(gas: str) -> GasSeries:
 
 @dataclass(frozen=True)
 class ForecastEpisode:
-    """One deterministic train/forecast split of a single gas record."""
+    """Represent a deterministic split between training and forecast months for one gas record."""
 
     gas: str
     seed: int
@@ -121,7 +121,8 @@ def forecast_episodes(
             y_mean = float(values[:n_train].mean())
             y_scale = max(float(values[:n_train].std()), 1e-8)
             train_targets = (values[:n_train] - y_mean) / y_scale
-            # Observation noise is added to training targets only; the held-out future stays clean.
+            # Add observation noise only to training targets. Leave held-out future values
+            # unchanged.
             sigma = noise_fraction * float(np.std(train_targets))
             if sigma > 0.0:
                 train_targets = train_targets + rng.normal(0.0, sigma, size=n_train)
@@ -144,11 +145,11 @@ def forecast_episodes(
 
 
 class GreenhouseKernelEvaluator:
-    """Cross-series predictive fitness used during kernel evolution.
+    """Score forecasts across gas records during kernel evolution.
 
-    Mirrors :class:`MetaKernelEvaluator`: fits only an outer covariance amplitude and
-    diagonal noise on every episode, scores held-out CRPS against the clean future of
-    the record, and returns negative mean CRPS so higher scores are better.
+    Like :class:`MetaKernelEvaluator`, fit only an outer covariance amplitude and
+    diagonal noise for each episode. Compute held-out CRPS against future observations
+    without added noise. Return negative mean CRPS so higher scores are better.
     """
 
     def __init__(
@@ -277,14 +278,16 @@ class GreenhouseKernelEvaluator:
 
 
 def _gas_spectral_mixture_tree(rng: np.random.Generator) -> dict[str, Any]:
-    """One seeded multi-start whose frequencies cover trend plus the annual band."""
+    """Generate one seeded set of initial parameters with frequencies for the trend and
+    annual cycle.
+    """
     return {
         "op": "base",
         "kind": "spectral_mixture",
         "variance": 1.0,
         "weights": rng.uniform(0.5, 2.0, size=4).tolist(),
-        # Frequencies are cycles per normalized span; records span roughly 25-47 years,
-        # so the annual cycle sits near frequency span_years and its harmonic near twice that.
+        # Frequencies count cycles over the normalized record span. Records span about 25-47 years.
+        # The annual cycle is near frequency span_years, and its harmonic is near twice that value.
         "means": [
             rng.uniform(0.0, 3.0),
             rng.uniform(8.0, 16.0),
@@ -296,7 +299,7 @@ def _gas_spectral_mixture_tree(rng: np.random.Generator) -> dict[str, Any]:
 
 
 def greenhouse_baseline_candidates() -> list[CandidateBundle]:
-    """Fixed closure-tree references with forecasting-appropriate grids."""
+    """Create fixed closure-tree reference kernels with parameter grids for forecasting."""
     source = 'def closure_tree(parameters):\n    return parameters["tree"]\n'
     rationale = "Fixed normalized-time reference for the greenhouse-gas benchmark."
     candidates: list[CandidateBundle] = []

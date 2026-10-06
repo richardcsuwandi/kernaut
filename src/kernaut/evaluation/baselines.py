@@ -88,7 +88,9 @@ def _random_feature_trees(x: NDArray[np.float64], rng: np.random.Generator) -> l
 
 
 class StandardBaselineRunner:
-    """Coarse-tune, verify, evaluate, and archive standard reference kernels."""
+    """Tune reference kernels on a coarse parameter grid, then verify, evaluate, and archive
+    them.
+    """
 
     def __init__(
         self,

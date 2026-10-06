@@ -12,17 +12,18 @@ from .base import AssistantReply, ConversationMessage, LanguageModel, RequestedT
 
 
 def _transient_error_types() -> tuple[type[BaseException], ...]:
-    """Request-level SDK errors plus network drops raised mid-stream by the
-    underlying HTTP stack (openai does not wrap streaming failures itself)."""
+    """Return SDK request errors and network errors that can occur during streaming.
+
+    The OpenAI SDK does not wrap failures raised by the HTTP layer during streaming.
+    """
     types: list[type[BaseException]] = [
         openai.APIConnectionError,
         openai.APITimeoutError,
-        openai.RateLimitError,
-        # A tool-call's streamed `arguments` string is accumulated fragment-by-fragment
-        # across chunks (see _consume_stream); a dropped or corrupted chunk mid-stream
-        # yields an incomplete/malformed JSON blob rather than a network-level
-        # exception. Treat it the same as the other transient stream failures above
-        # instead of crashing the whole campaign on one bad chunk.
+        openai.APIStatusError,
+        # _consume_stream combines fragments of the streamed `arguments` string.
+        # A missing or corrupt fragment can produce invalid JSON without a network exception.
+        # Treat invalid JSON like the other temporary stream failures listed above.
+        # One corrupt fragment should not end the campaign.
         json.JSONDecodeError,
     ]
     for module_name in ("httpx", "httpx2"):
@@ -58,6 +59,7 @@ class OpenAICompatibleModel(LanguageModel):
             api_key=api_key or "unused",
             base_url=base_url,
             timeout=timeout_seconds,
+            max_retries=0,
         )
 
     def complete(
@@ -101,6 +103,10 @@ class OpenAICompatibleModel(LanguageModel):
             try:
                 return self._consume_stream(wire_messages, wire_tools, kwargs)
             except _TRANSIENT_ERRORS as error:
+                if isinstance(error, openai.APIStatusError) and (
+                    error.status_code not in {408, 409, 429} and error.status_code < 500
+                ):
+                    raise
                 if attempt == self.max_retries:
                     raise
                 delay = self._backoff_delay(attempt, error)
@@ -116,7 +122,7 @@ class OpenAICompatibleModel(LanguageModel):
     @staticmethod
     def _backoff_delay(attempt: int, error: BaseException) -> float:
         headers = getattr(getattr(error, "response", None), "headers", None) or {}
-        raw = headers.get("retry-after") if isinstance(headers, dict) else None
+        raw = headers.get("retry-after")
         if raw is not None:
             try:
                 return min(max(float(raw), 1.0), 120.0)

@@ -1,20 +1,25 @@
 from __future__ import annotations
 
+from importlib import import_module
 from typing import Any, cast
 
 from .base import AssistantReply, ConversationMessage, LanguageModel, RequestedTool
 
 
 class AnthropicModel(LanguageModel):
-    def __init__(self, model: str, *, api_key: str | None, timeout_seconds: float) -> None:
+    def __init__(
+        self, model: str, *, api_key: str | None, timeout_seconds: float, max_retries: int = 4
+    ) -> None:
         try:
-            import anthropic
+            anthropic = import_module("anthropic")
         except ImportError as error:
             raise RuntimeError("Install kernaut[anthropic] to use Anthropic") from error
         if not api_key:
             raise ValueError("Anthropic API key is not configured")
         self.model = model
-        self.client = anthropic.Anthropic(api_key=api_key, timeout=timeout_seconds)
+        self.client = anthropic.Anthropic(
+            api_key=api_key, timeout=timeout_seconds, max_retries=max_retries
+        )
 
     def complete(
         self,

@@ -1,5 +1,5 @@
 # OpenRouter: one key for many providers. Reads OPENROUTER_API_KEY.
-# Use any OpenRouter model id, e.g. "anthropic/claude-sonnet-5" or "qwen/qwen3-coder".
+# Use an OpenRouter model ID, such as "anthropic/claude-sonnet-5" or "qwen/qwen3-coder".
 [llm]
 provider = "openrouter"
 model = "qwen/qwen3-coder"

@@ -21,7 +21,10 @@ def create_model(config: ModelConfig) -> LanguageModel:
         from .anthropic_model import AnthropicModel
 
         return AnthropicModel(
-            config.model, api_key=config.api_key(), timeout_seconds=config.timeout_seconds
+            config.model,
+            api_key=config.api_key(),
+            timeout_seconds=config.timeout_seconds,
+            max_retries=config.max_retries,
         )
     if config.provider in {"claude-code", "codex"}:
         from .cli_model import SubscriptionCLIModel
@@ -39,7 +42,7 @@ def create_model(config: ModelConfig) -> LanguageModel:
 
 
 def build_model(config: AppConfig) -> LanguageModel:
-    """Single model from [llm], or a Thompson-sampled ensemble from [[ensemble]]."""
+    """Create one model from [llm], or a Thompson-sampled ensemble from [[ensemble]]."""
     if not config.ensemble:
         if config.llm is None:
             raise ValueError("configuration requires [llm] or at least one [[ensemble]] entry")

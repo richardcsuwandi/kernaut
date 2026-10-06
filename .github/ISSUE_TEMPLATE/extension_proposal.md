@@ -9,8 +9,10 @@ Describe the task, model, or baseline and who would use it.
 
 ## Interface and dependencies
 
-Identify the extension group and required packages or datasets.
+State whether the extension adds a task, model provider, or baseline. List required packages
+and datasets.
 
 ## Evaluation
 
-Describe an offline test, the training and held-out data, and the comparison budget.
+Describe a test that needs no network access. Identify the training and held-out data.
+State the resource limits used to compare methods.

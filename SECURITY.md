@@ -1,17 +1,18 @@
 # Security
 
-Kernaut executes generated Python in a separate process with resource limits, restricted
-imports, a scrubbed environment, and a reduced built-in namespace. These controls contain
-research failures. They are not a hardened security boundary for hostile code.
+Kernaut runs generated Python code in a separate process. The process has resource limits,
+restricted imports, a filtered environment, and access to a limited set of built-in functions.
+These controls limit the effect of failures during research runs. They do not provide secure
+isolation for hostile code.
 
-Use an external hardened sandbox when candidate authors are outside your trust boundary.
-Installed task, model, and baseline plugins execute as ordinary trusted Python code in the
-main process. Install only extensions you trust.
+If you do not trust the candidate author, use an external sandbox designed to isolate hostile code.
+Task, model, and baseline extensions run as ordinary Python code in the main process.
+Install only extensions that you trust.
 
-Keep API keys out of candidate source, parameters, configuration files, archives, and prompts.
-Use environment variables. Archives may contain model messages and user context, so review
-archives before sharing them. The local dashboard binds to `127.0.0.1` by default.
+Store API keys in environment variables. Keep keys out of candidate code, parameters,
+configuration files, archives, and prompts. Archives may contain model messages and user context.
+Review archives before sharing them. The local dashboard listens on `127.0.0.1` by default.
 
 Report security problems privately to richardsuwandi@link.cuhk.edu.cn. Include the affected
-version, a minimal reproduction, and the expected impact. Avoid publishing credentials or
-sensitive run data in an issue.
+version, a small example that reproduces the problem, and the expected impact.
+Do not publish credentials or sensitive run data in an issue.

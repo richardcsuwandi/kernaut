@@ -32,11 +32,13 @@ class FrontierItem(BaseModel):
 
 
 class CandidateStore:
-    """SQLite-backed source of truth for candidates, evidence, scores, and lineage."""
+    """Store authoritative records of candidates, verification evidence, scores, and parent
+    relationships in SQLite.
+    """
 
     def __init__(self, path: str | Path) -> None:
-        # Worker execution and external model clients may temporarily alter process context. Keep
-        # the durable source of truth anchored to one canonical absolute path for the full run.
+        # Workers and model clients may temporarily change the process context.
+        # Use one absolute database path throughout the run so stored records remain accessible.
         self.path = Path(path).expanduser().resolve()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
@@ -178,9 +180,9 @@ class CandidateStore:
         trials: list[ParameterTrial] = []
         for row in rows:
             payload = json.loads(row["payload"])
-            # Pydantic serializes non-finite failure sentinels as JSON null. Keep
-            # those earlier failed trials queryable without treating them as
-            # competitive scores.
+            # Pydantic stores non-finite failure values as JSON null.
+            # Keep failed trials available for queries, but do not treat their scores as
+            # competitive.
             if payload.get("score") is None:
                 payload["score"] = float("-inf")
             trials.append(ParameterTrial.model_validate(payload))
@@ -254,10 +256,11 @@ class CandidateStore:
         return EvaluationRecord.model_validate_json(row["payload"]) if row else None
 
     def best_selection_score_since(self, marker: str) -> float | None:
-        """Best selection score evaluated at/after `marker` (UTC isoformat).
+        """Return the best selection score recorded at or after ``marker``.
 
-        Attribution uses the evaluation timestamp so re-evaluating an older
-        candidate still counts toward the campaign that produced it.
+        Specify ``marker`` as a UTC timestamp in ISO format. Use the evaluation timestamp
+        to attribute a score to a campaign. A new evaluation of an older candidate can
+        therefore count toward the current campaign.
         """
         with self._connect() as db:
             row = db.execute(

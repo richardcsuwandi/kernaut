@@ -106,3 +106,28 @@ def test_parameter_trials_load_earlier_failed_scores(tmp_path) -> None:
 
     assert len(trials) == 1
     assert trials[0].score == float("-inf")
+
+
+def test_failed_evaluation_with_infinite_condition_is_readable(tmp_path):
+    import math
+
+    store = CandidateStore(tmp_path / "archive.sqlite")
+    candidate = CandidateBundle(
+        name="failed_fit",
+        contract="feature_map",
+        source="def feature_point(x, parameters): return x",
+    )
+    store.add_candidate(candidate)
+    record = EvaluationRecord(
+        candidate_id=candidate.candidate_id,
+        score=-2.0,
+        negative_log_likelihood=2.0,
+        runtime_seconds=0.1,
+        jitter=1.0,
+        condition_number=float("inf"),
+        metadata={"failed_tasks": 1},
+    )
+    store.add_evaluation(record)
+    loaded = store.latest_evaluation(candidate.candidate_id)
+    assert loaded.score == -2.0
+    assert math.isinf(loaded.condition_number)

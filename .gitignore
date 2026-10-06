@@ -21,3 +21,4 @@ tmp/
 .cursor/
 .qwen/
 .DS_Store
+site/

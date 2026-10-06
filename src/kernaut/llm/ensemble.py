@@ -12,11 +12,12 @@ from .base import AssistantReply, ConversationMessage, LanguageModel
 
 
 class ThompsonSampler:
-    """Sliding-window Beta-Bernoulli bandit over model indices.
+    """Select model indices with a Beta-Bernoulli bandit over a sliding window.
 
-    Rewards are fractional: ``update(arm, r)`` with ``r in [0, 1]`` contributes
-    ``r`` to the arm's alpha mass and ``1 - r`` to its beta mass, so a single
-    observation is soft evidence rather than a hard success/failure.
+    Each bandit arm represents one model. Rewards can be fractional. An update
+    ``update(arm, r)`` with ``r in [0, 1]`` adds ``r`` to the arm's alpha mass and
+    ``1 - r`` to its beta mass. An observation therefore provides fractional evidence
+    instead of a binary success or failure.
     """
 
     def __init__(self, n_arms: int, *, bandit: BanditConfig) -> None:
@@ -25,7 +26,7 @@ class ThompsonSampler:
         self.history: list[deque[float]] = [deque(maxlen=bandit.window_size) for _ in range(n_arms)]
 
     def select(self, rng: random.Random) -> int:
-        """Round-robin warmup until every arm has ``min_samples``, then Thompson draw."""
+        """Use round-robin sampling until each arm has ``min_samples``, then Thompson sampling."""
         counts = [len(window) for window in self.history]
         if min(counts) < self.bandit.min_samples:
             return counts.index(min(counts))
@@ -51,13 +52,15 @@ class ThompsonSampler:
 
 
 class EnsembleModel(LanguageModel):
-    """Weighted ensemble of models with adaptive per-campaign selection.
+    """Select models from a weighted ensemble using feedback from search campaigns.
 
-    The evolutionary loop brackets each campaign with :meth:`begin_campaign` /
-    :meth:`end_campaign`; the chosen model handles every call inside that
-    campaign and its campaign score feeds the Thompson bandit as reward.
-    Outside a campaign (e.g. conversational runs), each ``complete()`` call
-    samples proportionally to posterior means (prior weights before data).
+    The evolutionary loop calls :meth:`begin_campaign` and :meth:`end_campaign`
+    around each campaign. One selected model handles all requests in that campaign.
+    Its campaign score provides the reward for the Thompson bandit.
+
+    Outside a campaign, including conversational searches, each ``complete()`` call
+    samples a model in proportion to its posterior mean. Before observations are
+    available, sampling uses the configured prior weights.
     """
 
     def __init__(
@@ -119,7 +122,9 @@ class EnsembleModel(LanguageModel):
         return self.children[index].complete(messages, tools, system_prompt)
 
     def _normalize(self, score: float | None) -> float:
-        """Map a raw campaign score to [0, 1] via running min/max across campaigns."""
+        """Map a campaign score to [0, 1] using the minimum and maximum observed across
+        campaigns.
+        """
         if score is None or not math.isfinite(score):
             return 0.0
         if self._score_min is None or score < self._score_min:

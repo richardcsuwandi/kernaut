@@ -1,16 +1,16 @@
-"""ChemBench adapter for certified kernel discovery.
+"""Connect ChemBench to kernel discovery with construction contracts.
 
-ChemBench (from the LLM-AutoSciLab release, scientific-discovery org) is an
-enzyme-kinetics active-experimentation benchmark: 100 mechanism domains
-(``c0``..``c99``), each a distinct rate law over 7 continuous inputs
-(substrate/inhibitor/product concentrations, enzyme loading, temperature,
-pH), returning a single observed reaction rate ``r0``. The adapter only ever
-calls the oracle's public ``run(params) -> OracleResult`` method; it never
-imports the internal rate-law functions or parameter tables.
+ChemBench is an enzyme-kinetics benchmark from LLM-AutoSciLab, released by the
+scientific-discovery organization. It supports active experimentation across
+100 mechanism domains (``c0``..``c99``). Each domain defines a distinct rate law
+over seven continuous inputs: concentrations, enzyme loading, temperature, and pH.
+The output is one observed reaction rate, ``r0``.
 
-This is a first-stage surrogate benchmark: it tests whether a frozen kernel
-is a useful prior for regressing enzyme kinetics from scattered experiments,
-not that the kernel itself is a recovered rate law.
+This adapter calls only the oracle's public ``run(params) -> OracleResult``
+method. It does not import internal rate-law functions or parameter tables.
+The benchmark tests whether a fixed kernel provides a useful prior for predicting
+reaction rates from scattered experiments. It does not establish that the kernel
+itself recovers a rate law.
 """
 
 from __future__ import annotations
@@ -55,8 +55,8 @@ CHEM_TRAIN_DOMAINS: tuple[str, ...] = (
     "c8_hill_cooperativity",
     "c9_noncompetitive_inhibition",
 )
-# Genuinely novel single-mechanism domains, structurally distinct from every
-# c0-c9 training mechanism (not a recombination of them) -- held out entirely.
+# These held-out domains each contain one mechanism that differs structurally
+# from every c0-c9 training mechanism. They are not recombinations of those mechanisms.
 CHEM_TEST_DOMAINS: tuple[str, ...] = (
     "c65_ordered_bi_bi",
     "c66_reversible_mm",
@@ -82,7 +82,7 @@ OracleFactory = Callable[..., Any]
 
 @dataclass(frozen=True)
 class ChemEpisode:
-    """One domain with disjoint observed and held-out experiments."""
+    """Represent one mechanism domain with separate observed and held-out experiments."""
 
     domain: str
     seed: int
@@ -99,7 +99,7 @@ class ChemEpisode:
 
 
 def _encode(params: dict[str, float]) -> NDArray[np.float64]:
-    """Normalize a raw 7-variable parameter dict to [0, 1]^7."""
+    """Normalize a dictionary of seven raw input variables to [0, 1]^7."""
     row = np.empty(CHEM_INPUT_DIMENSION, dtype=np.float64)
     for index, var in enumerate(CHEM_INPUT_VARS):
         low, high = CHEM_INPUT_BOUNDS[var]
@@ -134,11 +134,11 @@ def chembench_episodes(
     difficulty: str = "easy",
     oracle_factory: OracleFactory | None = None,
 ) -> list[ChemEpisode]:
-    """Generate deterministic rate-regression episodes through the public oracle API.
+    """Generate deterministic reaction-rate prediction episodes through the public oracle API.
 
-    Training and validation use the same domains with disjoint experiment
-    seeds. Test episodes use only held-out domains. Every episode also has
-    disjoint within-domain train and test experiments.
+    Training and validation use the same domains but different experiment seeds.
+    Test episodes use only held-out domains. Within each episode, training and test
+    experiments are also separate.
     """
     if episodes_per_domain < 1:
         raise ValueError("episodes_per_domain must be positive")
@@ -202,7 +202,7 @@ def chembench_episodes(
 
 
 class ChemBenchKernelEvaluator:
-    """Held-out rate-law prediction across ChemBench mechanism domains."""
+    """Evaluate predictions of held-out reaction rates across ChemBench mechanism domains."""
 
     def __init__(
         self,
@@ -357,7 +357,7 @@ class ChemBenchKernelEvaluator:
 
 
 def chembench_baseline_candidates() -> list[CandidateBundle]:
-    """Normalized-input reference kernels for the ChemBench adapter."""
+    """Create reference kernels for normalized ChemBench inputs."""
     return [
         candidate.model_copy(
             update={
@@ -379,8 +379,8 @@ def _load_oracle_factory(root: Path) -> OracleFactory:
     from autoscilab.oracle.chembench import ChemBenchOracle  # type: ignore[import-not-found]
 
     def factory(domain_id: str, **kwargs: Any) -> Any:
-        # ChemBenchOracle.__init__ prints a diagnostic line to stdout; the CLI
-        # writes benchmark reports to stdout, so this would corrupt that JSON.
+        # ChemBenchOracle.__init__ prints diagnostics to stdout. Suppress those diagnostics
+        # so they do not corrupt the JSON benchmark report that the CLI writes to stdout.
         with contextlib.redirect_stdout(io.StringIO()):
             return ChemBenchOracle(domain_id, **kwargs)
 

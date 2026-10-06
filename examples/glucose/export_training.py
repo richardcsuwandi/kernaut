@@ -1,10 +1,12 @@
-"""Shared GlucoseBench harness side: acquisition policy and public training export.
+"""Export public GlucoseBench training data using a fixed acquisition policy.
 
-Kernaut has no experiment design, so every kernel sees the same training episodes: the two
-passive GlucoseBench episodes plus four distinct menu actions drawn with a fixed per-patient
-seed. Zero-bolus actions with a nonzero delay duplicate their zero-delay twin, so they are
-excluded before sampling. Only public training payloads are exported; sealed test outcomes
-stay inside glucosebench.Evaluator and are not exported.
+Kernaut does not select experiments. Each kernel receives the same training data:
+two passive episodes and four distinct interventions, sampled with a fixed seed
+for each patient. If the bolus is zero, different bolus delays describe the same
+action. Remove those duplicates before sampling.
+
+Export only public training data. Keep hidden test outcomes inside
+glucosebench.Evaluator.
 
 Usage: .venv/bin/python examples/glucose/export_training.py --out runs/glucosebench/training.json
 """
@@ -24,7 +26,7 @@ DEMO_ACTIONS = [0, 12, 24, 36]  # the GlucoseBench README's fixed example policy
 
 
 def acquisition(patient, menu, salt=""):
-    """Four distinct interventions, seeded by patient identity only (never by outcomes)."""
+    """Select four distinct interventions using patient identity as the seed, never outcomes."""
     distinct = sorted(
         i for i, p in menu.items() if p["bolus_U"] > 0 or p["bolus_minute"] == p["meal_minute"]
     )
@@ -33,7 +35,11 @@ def acquisition(patient, menu, salt=""):
 
 
 def benchmark_with_training(patient, acq="default"):
-    """acq: 'default' (the searched protocol), 'seedK' (another random draw), or 'demo'."""
+    """Create a benchmark and collect training episodes with the selected policy.
+
+    Set ``acq`` to ``default`` for the search policy, ``seedK`` for another random
+    draw, or ``demo`` for the fixed example policy.
+    """
     run = Benchmark(patient, replicate=0)
     if acq == "default":
         actions = acquisition(patient, run.actions)

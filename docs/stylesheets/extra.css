@@ -1,0 +1,12 @@
+/* Keep the documentation close to Material's built-in layout. */
+.hero-logo { display: block; width: min(640px, 100%); margin: 0 auto 1.4rem; }
+.md-typeset h1 { font-weight: 650; letter-spacing: -.025em; }
+.md-typeset .lead { font-size: 1.12em; line-height: 1.65; }
+.md-typeset img.screenshot { border-radius: 8px; border: 1px solid var(--md-default-fg-color--lightest); }
+.md-typeset .caption { color: var(--md-default-fg-color--light); font-size: .85em; }
+.md-typeset .md-button { border-radius: 5px; margin: .2rem .35rem .5rem 0; }
+.md-typeset .grid.cards > ul > li { border-radius: 8px; }
+
+.archive-demo { display: block; width: 100%; height: 850px; border: 1px solid var(--md-default-fg-color--lightest); border-radius: 8px; background: var(--md-default-bg-color); }
+.demo-links { display: flex; flex-wrap: wrap; gap: 1rem; margin: .6rem 0 1.4rem; }
+@media (max-width: 680px) { .archive-demo { height: 950px; } }

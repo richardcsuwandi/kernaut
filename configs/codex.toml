@@ -1,5 +1,6 @@
 [llm]
-# Uses your logged-in ChatGPT (codex login) subscription; no API key needed. Empty model = CLI default.
+# Use the ChatGPT subscription account signed in through `codex login`. No API key is needed.
+# An empty model value selects the CLI default.
 provider = "codex"
 model = ""
 timeout_seconds = 600.0

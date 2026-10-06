@@ -13,8 +13,7 @@ behavioral distinction, and a falsification test. Then stage, verify, tune, and 
 normal immutable-candidate workflow.
 
 Prefer `input_transform`, `feature_map`, `residual_input_transform`, or genuinely new `spectral`
-constructions. The trusted interpreter constructs the Gram matrix; candidate code should only
-return the certified pointwise transform, features, or spectral components required by its
+constructions. The trusted interpreter constructs the Gram matrix. Candidate code should only return the certified pointwise transform, features, or spectral components required by its
 contract. The kernel must accept any input dimension. Independent ideas have no
 parents, while a real revision must cite the candidate it changes.
 

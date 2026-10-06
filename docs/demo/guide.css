@@ -1,0 +1,65 @@
+/* Keep the live viewer's layout, with larger text for embedded documentation. */
+body.demo-mode { height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+#demo-guide { flex: none; padding: 18px 22px 16px; border-bottom: 1px solid var(--border-strong); background: var(--surface); }
+.guide-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.guide-label { color: var(--text); font-size: 13px; font-weight: 650; }
+.guide-label > span { margin-left: 12px; color: var(--text-soft); font-size: 11px; font-weight: 400; }
+.guide-controls { display: flex; gap: 6px; }
+.guide-controls button { padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: 5px; background: var(--surface); font-size: 12px; }
+.guide-controls button:last-child { color: var(--surface); background: var(--text); }
+.guide-controls button:disabled { cursor: default; opacity: .4; }
+.guide-steps { display: flex; gap: 6px; margin: 14px 0 12px; overflow-x: auto; }
+.guide-steps button { display: flex; align-items: center; gap: 6px; white-space: nowrap; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); padding: 6px 10px; color: var(--text-soft); font-size: 12px; }
+.guide-steps button > span { font: 11px var(--mono); }
+.guide-steps button[aria-current="step"] { color: var(--blue); border-color: var(--blue); background: var(--blue-soft); }
+.guide-copy h2 { margin: 0 0 5px; font-size: 16px; font-weight: 600; }
+.guide-copy p { margin: 0; max-width: 105ch; color: var(--text-soft); font-size: 13px; line-height: 1.55; }
+.demo-mode .app-shell { flex: 1; min-height: 0; grid-template-columns: 238px minmax(0, 1fr); }
+.demo-mode .sidebar { position: static; height: auto; min-height: 0; max-height: none; }
+.demo-mode .candidate-list { max-height: none; }
+.demo-mode .workspace { padding: 18px; overflow: auto; min-height: 0; }
+.demo-mode .topbar { margin-bottom: 12px; gap: 10px; }
+.demo-mode .content-card { min-height: 0; }
+.demo-mode .panel { padding: 18px; }
+.demo-mode .tabs { overflow-x: auto; }
+.demo-mode .tab { padding: 7px 9px; white-space: nowrap; }
+.demo-mode .candidate-title h2, .demo-mode .verification-head h2 { font-size: 19px; overflow-wrap: anywhere; }
+.demo-mode .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.demo-mode .metric { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.demo-mode .metric:nth-child(3n) { border-right: 0; }
+.demo-mode .metric:nth-last-child(-n + 3) { border-bottom: 0; }
+.demo-mode .metric span { font-size: 10px; color: var(--text-soft); }
+.demo-mode .candidate-id, .demo-mode .score { font-size: 11px; color: var(--text-soft); }
+.demo-mode .prose, .demo-mode pre, .demo-mode .event-body { font-size: 12px; }
+.demo-mode .plot-card { overflow-x: auto; }
+.demo-mode #pareto-plot { min-width: 640px; }
+.demo-mode #progress-plot { min-width: 720px; }
+.demo-mode .axis-label, .demo-mode .axis-title, .demo-mode .legend { font-size: 12px; }
+.demo-mode .legend { color: var(--text-soft); }
+.demo-mode .progress-annotation, .demo-mode .baseline-label { font-size: 11px; }
+.demo-mode .trace-panel .prose { margin-bottom: 16px; }
+@media (max-width: 900px) {
+  .demo-mode .sidebar { border-right: 1px solid var(--border); border-bottom: 0; }
+  .demo-mode .assurance-ladder { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .demo-mode .verification-head { flex-wrap: wrap; gap: 12px; }
+}
+@media (max-width: 680px) {
+  #demo-guide { padding: 12px; }
+  .guide-label > span { display: block; margin: 3px 0 0; }
+  .guide-steps { margin: 10px 0; }
+  .guide-copy h2 { font-size: 14px; }
+  .guide-copy p { font-size: 12px; }
+  .demo-mode .app-shell { display: flex; flex-direction: column; overflow: auto; }
+  .demo-mode .sidebar { flex: none; height: 225px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .demo-mode .brandbar { height: 42px; flex: none; }
+  .demo-mode .rail-head { padding-top: 8px; padding-bottom: 6px; }
+  .demo-mode .search { flex: none; height: 30px; margin-bottom: 5px; }
+  .demo-mode .workspace { flex: none; overflow: visible; padding: 12px; }
+  .demo-mode .panel { padding: 12px; }
+  .demo-mode .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .demo-mode .metric:nth-child(3n) { border-right: 1px solid var(--border); }
+  .demo-mode .metric:nth-child(2n) { border-right: 0; }
+  .demo-mode .metric:nth-last-child(-n + 3) { border-bottom: 1px solid var(--border); }
+  .demo-mode .metric:nth-last-child(-n + 2) { border-bottom: 0; }
+  .demo-mode .workspace-heading code { max-width: 65vw; }
+}

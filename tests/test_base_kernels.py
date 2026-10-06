@@ -155,3 +155,16 @@ def test_invalid_new_kernel_parameters_rejected() -> None:
             {"op": "base", "kind": "ard_rbf", "lengthscales": [-1.0, 1.0]},
             x,
         )
+
+
+@pytest.mark.parametrize("weights", [[-1.0, 2.0], [0.0, 0.0]])
+def test_spectral_mixture_rejects_invalid_weights(weights):
+    tree = {
+        "op": "base",
+        "kind": "spectral_mixture",
+        "weights": weights,
+        "means": [0.0, 1.0],
+        "scales": [0.1, 0.1],
+    }
+    with pytest.raises(ValueError, match="weights"):
+        _evaluate_tree(tree, np.array([[0.0], [0.5]]))

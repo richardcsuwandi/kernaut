@@ -590,8 +590,8 @@ class HarnessTools:
         }
         novelty = metadata.get("functional_novelty", 0.0)
         novelty_penalty = float(metadata.get("novelty_penalty", 0.0))
-        # A material quality improvement can justify a near-reference candidate, while a weak
-        # duplicate still pays the full soft penalty. This avoids a discontinuous -2 cliff.
+        # A substantial quality improvement can justify a candidate close to a reference kernel.
+        # A weak duplicate still receives the full soft penalty. This avoids a -2 discontinuity.
         novelty_relief = min(max(mean_improvement, 0.0) * 5.0, 1.0)
         adjusted_novelty_penalty = novelty_penalty * (1.0 - novelty_relief)
         metadata["quality_descriptors"] = {
@@ -613,12 +613,14 @@ class HarnessTools:
                 if isinstance(reference_bo, dict):
                     baseline_auc.append(float(reference_bo["regret_auc"]))
                     baseline_final.append(float(reference_bo["final_regret"]))
-            if baseline_auc and float(bo["regret_auc"]) > 0:
+            if baseline_auc:
                 best_auc = min(baseline_auc)
-                bo_auc_improvement = (best_auc - float(bo["regret_auc"])) / best_auc
-            if baseline_final and float(bo["final_regret"]) > 0:
+                bo_auc_improvement = (best_auc - float(bo["regret_auc"])) / max(best_auc, 1e-12)
+            if baseline_final:
                 best_final = min(baseline_final)
-                final_regret_improvement = (best_final - float(bo["final_regret"])) / best_final
+                final_regret_improvement = (best_final - float(bo["final_regret"])) / max(
+                    best_final, 1e-12
+                )
             quality = (
                 0.55 * mean_improvement
                 + 0.30 * bo_auc_improvement
@@ -692,10 +694,9 @@ class HarnessTools:
     def _sample_parameter(spec: ParameterSpec, unit: float, template: Any = None) -> Any:
         """Sample a parameter while preserving the shape of its initial value.
 
-        Parameter specs describe the domain of one scalar, while kernel programs
-        commonly expose vectors or matrices (for example one frequency per
-        spectral component). Sampling the scalar domain must therefore recurse
-        through the initial value instead of replacing an array with a scalar.
+        Each parameter specification defines a scalar domain. Kernel programs may expose
+        vectors or matrices, such as one frequency per spectral component. Apply scalar
+        sampling recursively to those values. Do not replace an array with a scalar.
         """
         if isinstance(template, dict):
             return {

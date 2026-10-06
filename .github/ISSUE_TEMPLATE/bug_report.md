@@ -9,7 +9,8 @@ Describe the observed and expected behavior.
 
 ## Reproduction
 
-Include a minimal command or example, the Kernaut version, Python version, and operating system.
+Include a short command or example that reproduces the problem. State the Kernaut version,
+Python version, and operating system.
 Remove API keys, private data, and sensitive model messages.
 
 ## Output

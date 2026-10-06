@@ -17,10 +17,10 @@ from .base import ExecutionFailure, ExecutionResult, KernelExecutor
 
 
 class SubprocessExecutor(KernelExecutor):
-    """Runs each candidate in a fresh, resource-limited Python interpreter.
+    """Run each candidate in a new Python process with resource limits.
 
-    This provides failure containment for research code. It is not a hardened
-    security boundary; untrusted third-party code should use a container backend.
+    This process limits the effect of failures in research code. It does not provide
+    secure isolation. Use a container backend for untrusted third-party code.
     """
 
     def __init__(self, config: ExecutionConfig | None = None) -> None:

@@ -1,4 +1,5 @@
-# Mix providers in one Thompson-sampled ensemble. Each member names its own provider.
+# Combine providers in an ensemble that uses Thompson sampling to select a model.
+# Each member specifies its own provider.
 [[ensemble]]
 provider = "openrouter"
 model = "qwen/qwen3-coder"

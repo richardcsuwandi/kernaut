@@ -4,7 +4,7 @@ Describe the problem and resulting behavior.
 
 ## Validation
 
-List the commands you ran and observed results. State untested integrations.
+List the commands you ran and their results. State which integrations you did not test.
 
 ## Research impact
 

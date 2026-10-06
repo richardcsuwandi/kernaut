@@ -26,7 +26,7 @@ class FunctionalNoveltyResult:
 
 
 class NoveltyPolicy:
-    """Submission-time guardrails for structurally novel kernel discovery."""
+    """Check structural novelty requirements when a kernel is submitted."""
 
     required_fields = (
         "mathematical_form",
@@ -77,10 +77,10 @@ class NoveltyPolicy:
         if source_errors:
             raise ValueError("invalid candidate source: " + "; ".join(source_errors))
 
-        # No parents denotes an independent root idea. Supplying parents explicitly claims a
-        # revision and activates lineage validation below. Functional novelty is evaluated
-        # against accepted archive discoveries later, so forcing unrelated roots into the first
-        # discovery's lineage adds no duplicate protection and records false ancestry.
+        # An empty parent list identifies an independent idea. A parent ID claims a revision
+        # and triggers the relationship checks below. Later checks compare functional novelty
+        # against accepted discoveries. Assigning unrelated parents adds no protection against
+        # duplicates and records a false relationship.
         for parent_id in candidate.parents:
             parent = store.get_candidate(parent_id)
             if parent is None:
@@ -94,7 +94,10 @@ class NoveltyPolicy:
 
 
 class FunctionalNoveltyEvaluator:
-    """Amplitude-invariant distance from a fixed bank of familiar Gram matrices."""
+    """Measure distance from a fixed set of reference Gram matrices.
+
+    The distance is invariant to kernel amplitude.
+    """
 
     def __init__(
         self,

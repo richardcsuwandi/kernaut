@@ -23,7 +23,10 @@ class CampaignResult(BaseModel):
 
 
 class SynthesisController:
-    """Bounded propose/verify/evaluate/revise loop with durable event checkpoints."""
+    """Propose, verify, evaluate, and revise kernels within a fixed search budget.
+
+    Save conversation events so an interrupted search can resume.
+    """
 
     def __init__(
         self,
@@ -130,12 +133,14 @@ class SynthesisController:
                 )
                 handler = self.tools.handlers.get(call.name)
                 if handler is None:
-                    result = f'{{"ok": false, "error": "unknown tool: {call.name}"}}'
+                    result = json.dumps({"ok": False, "error": f"unknown tool: {call.name}"})
                 else:
                     try:
                         result = handler(**call.arguments)
                     except Exception as error:
-                        result = f'{{"ok": false, "error": "{type(error).__name__}: {error}"}}'
+                        result = json.dumps(
+                            {"ok": False, "error": f"{type(error).__name__}: {error}"}
+                        )
                 tool_count += 1
                 self._progress(
                     f"[tool {tool_count}/{self.max_tool_calls}] {call.name} "
@@ -163,10 +168,21 @@ class SynthesisController:
     def _recover_interrupted_tool_calls(
         self, run_id: str, messages: list[ConversationMessage]
     ) -> None:
-        """Close tool calls whose result was lost during an interrupted checkpoint."""
-        if not messages or messages[-1].role != "assistant":
+        """Complete tool calls whose results were not saved before an interruption."""
+        assistant_index = next(
+            (i for i in range(len(messages) - 1, -1, -1) if messages[i].role == "assistant"),
+            None,
+        )
+        if assistant_index is None:
             return
-        pending_calls = messages[-1].tool_calls
+        completed = {
+            message.tool_call_id
+            for message in messages[assistant_index + 1 :]
+            if message.role == "tool"
+        }
+        pending_calls = [
+            call for call in messages[assistant_index].tool_calls if call.call_id not in completed
+        ]
         if not pending_calls:
             return
         for call in pending_calls:

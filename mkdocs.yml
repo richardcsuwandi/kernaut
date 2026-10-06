@@ -1,0 +1,91 @@
+site_name: Kernaut
+site_description: Discovering reusable inductive biases through kernel programs and meta-evaluation.
+site_url: https://richardcsuwandi.github.io/kernaut/
+repo_name: richardcsuwandi/kernaut
+repo_url: https://github.com/richardcsuwandi/kernaut
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; 2026 Richard Cornelius Suwandi
+
+theme:
+  name: material
+  font: false
+  logo: assets/icon.svg
+  favicon: assets/icon.svg
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: deep purple
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: deep purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+
+hooks:
+  - docs/_hooks/viewer.py
+
+exclude_docs: |
+  _hooks/
+
+watch:
+  - src/kernaut/viz/static
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true
+
+validation:
+  links:
+    not_found: warn
+    unrecognized_links: warn
+    anchors: warn
+
+nav:
+  - Overview: index.md
+  - Installation: getting-started.md
+  - Benchmarks: tasks.md
+  - Meta-evaluation: meta-evaluation.md
+  - Custom regression: your-problem.md
+  - Custom benchmarks: custom-benchmarks.md
+  - Baseline comparisons: baselines.md
+  - Archive visualization: visualize.md
+  - Contributions: contributing.md
+  - Reference:
+      - Extension API: extensions.md
+      - Verification: verification.md
+      - References and attribution: references.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/richardcsuwandi/kernaut
+    - icon: fontawesome/solid/globe
+      link: https://richardcsuwandi.github.io

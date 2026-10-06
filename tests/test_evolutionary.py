@@ -116,3 +116,20 @@ def test_evolutionary_sampling_distinguishes_roots_and_revisions(tmp_path) -> No
     assert mode == "revision"
     assert selected is not None
     assert selected.candidate.candidate_id == parent.candidate_id
+
+
+def test_failed_selection_score_does_not_break_evolution(tmp_path):
+    store = CandidateStore(tmp_path / "archive.sqlite")
+    candidate = _archive_candidate(
+        store,
+        name="failed",
+        niche="input_geometry",
+        growth="O(d)",
+        novelty_band="unknown",
+        score=-2.0,
+    )
+    failed = store.latest_evaluation(candidate.candidate_id).model_copy(
+        update={"condition_number": float("inf"), "metadata": {"selection_score": float("-inf")}}
+    )
+    store.add_evaluation(failed)
+    assert QualityDiversityArchive(store).elites() == []

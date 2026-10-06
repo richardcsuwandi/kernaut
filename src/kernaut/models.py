@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from enum import IntEnum, StrEnum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 def utc_now() -> datetime:
@@ -36,7 +36,7 @@ class EvidenceTier(IntEnum):
 
 
 class CandidateBundle(BaseModel):
-    """Immutable, content-addressed proposal emitted by the synthesis agent."""
+    """Represent an immutable kernel proposal with an ID computed from its contents."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -172,6 +172,13 @@ class EvaluationRecord(BaseModel):
     runtime_seconds: float
     jitter: float
     condition_number: float
+
+    @field_validator("condition_number", mode="before")
+    @classmethod
+    def restore_failed_condition(cls, value: Any) -> Any:
+        # JSON stores an infinite condition number as null after a failed fit.
+        return float("inf") if value is None else value
+
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
 

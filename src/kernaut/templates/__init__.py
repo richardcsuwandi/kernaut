@@ -1,1 +1,1 @@
-"""Package resources used to initialize experiment workspaces."""
+"""Store template files used to create experiment directories."""

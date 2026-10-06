@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "kernaut"
 version = "0.1.0"
-description = "Kernaut: verified autoresearch for open-ended Gaussian-process kernel discovery"
+description = "Kernaut: verified autoresearch for open-ended kernel discovery"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -37,7 +37,7 @@ kernaut-viz = "kernaut.viz.server:main"
 packages = ["src/kernaut"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/kernaut", "tests", "examples", "configs", "README.md", "LICENSE", "CITATION.cff", "CONTRIBUTING.md", "SECURITY.md", "docs", "assets", ".env.example", "uv.lock"]
+include = ["src/kernaut", "tests", "examples", "configs", "README.md", "LICENSE", "CITATION.cff", "CONTRIBUTING.md", "SECURITY.md", "docs", "assets", ".env.example", "uv.lock", "mkdocs.yml", "requirements-docs.txt"]
 
 [tool.ruff]
 line-length = 100

@@ -1,4 +1,4 @@
-"""Kernaut (Kernel Autoresearch): verification-gated kernel program synthesis."""
+"""Kernaut (Kernel Autoresearch): generate kernel programs and verify them before acceptance."""
 
 from .models import CandidateBundle, CandidateOrigin, ContractKind, EvidenceTier
 

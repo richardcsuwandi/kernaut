@@ -41,12 +41,12 @@ def _decode(raw: str | None) -> Any:
 
 
 def _json_safe(value: Any) -> Any:
-    """Return a browser-compatible JSON value.
+    """Convert a value to JSON that a browser can read.
 
-    Python's JSON encoder emits NaN and Infinity by default, but those tokens are
-    not valid JSON and are rejected by ``Response.json()`` in browsers. Failed
-    search trials can legitimately record those sentinel values, so represent
-    them as missing values in the viewer payload.
+    Python's JSON encoder can emit NaN and Infinity. Those values are not valid JSON,
+    and a browser's ``Response.json()`` method rejects them. Failed search trials can
+    record these values to indicate failure. Represent them as missing values in
+    the response sent to the viewer.
     """
     if isinstance(value, float) and not math.isfinite(value):
         return None
@@ -84,7 +84,7 @@ def _frontier_ids(candidates: list[dict[str, Any]]) -> set[str]:
 
 
 def _progress_timeline(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Chronological evaluation history with running-best bookkeeping."""
+    """Return latest candidate scores in submission order and track the best score."""
     names = {candidate["candidate_id"]: candidate["name"] for candidate in candidates}
     scored = [
         candidate
@@ -93,8 +93,8 @@ def _progress_timeline(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]
         and isinstance(candidate.get("evaluation"), dict)
         and candidate["evaluation"].get("created_at")
     ]
-    # Chronological key is the candidate's own submission time: baselines are periodically
-    # re-evaluated in later runs, which would otherwise scramble the discovery storyline.
+    # Order candidates by submission time. Baselines can be evaluated again in later runs.
+    # Ordering by those later evaluations would change the displayed discovery sequence.
     scored.sort(key=lambda candidate: str(candidate.get("created_at") or ""))
     timeline: list[dict[str, Any]] = []
     running_best: float | None = None

@@ -7,13 +7,13 @@ may receive one insulin bolus, and CGM is read every five minutes. Every episode
 starts from the same physiological state, so episodes differ only through their intervention and
 sensor noise.
 
-Every GP input is one CGM reading, a five-dimensional vector in `[0, 1]` with coordinates in
-this order:
+Each Gaussian process (GP) input represents one CGM reading as a five-dimensional vector in
+`[0, 1]`. Its coordinates are:
 
-1. reading time, minutes divided by 360;
-2. meal size, grams divided by 60;
-3. meal start time, minutes divided by 360;
-4. bolus size, insulin units divided by 1.5 (zero means no bolus); and
+1. reading time, minutes divided by 360.
+2. meal size, grams divided by 60.
+3. meal start time, minutes divided by 360.
+4. bolus size, insulin units divided by 1.5 (zero means no bolus).
 5. bolus start time, minutes divided by 360 (equal to the meal start when there is no bolus).
 
 Coordinates 2-5 are constant within an episode, so the kernel decides both how readings
@@ -26,8 +26,7 @@ behavioral distinction, and a falsification test. Then stage, verify, tune, and 
 normal immutable-candidate workflow.
 
 Prefer `input_transform`, `feature_map`, `residual_input_transform`, or genuinely new `spectral`
-constructions. The trusted interpreter constructs the Gram matrix; candidate code should only
-return the certified pointwise transform, features, or spectral components required by its
+constructions. The trusted interpreter constructs the Gram matrix. Candidate code should only return the certified pointwise transform, features, or spectral components required by its
 contract. The input dimension is fixed at five for this benchmark. Independent ideas have no
 parents, while a real revision must cite the candidate it changes.
 

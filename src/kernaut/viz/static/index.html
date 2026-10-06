@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>Kernaut · Archive</title>
+  <title>Kernaut, Archive</title>
   <script>
     const savedTheme = localStorage.getItem("kernaut-theme");
     document.documentElement.dataset.theme = savedTheme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   </script>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-shell">
@@ -32,7 +32,7 @@
         </div>
         <label class="search">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-          <input id="search" type="search" placeholder="Search candidates…">
+          <input id="search" aria-label="Search candidates" type="search" placeholder="Search candidates…">
         </label>
         <div id="candidate-list" class="candidate-list"></div>
       </section>
@@ -70,6 +70,6 @@
   </div>
 
   <div id="toast" role="status" aria-live="polite"></div>
-  <script src="/app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

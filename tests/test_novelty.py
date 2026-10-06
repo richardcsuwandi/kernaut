@@ -7,7 +7,7 @@ from kernaut.archive import CandidateStore
 from kernaut.evaluation import Dataset, GaussianProcessEvaluator
 from kernaut.evaluation.novelty import FunctionalNoveltyEvaluator, NoveltyPolicy
 from kernaut.execution import SubprocessExecutor
-from kernaut.models import CandidateBundle, EvaluationRecord
+from kernaut.models import CandidateBundle, CandidateOrigin, EvaluationRecord
 from kernaut.verification import Verifier
 
 FORMULATION = {
@@ -259,7 +259,7 @@ def test_staged_candidate_parameter_optimization_and_submission(tmp_path) -> Non
     )
     assert staged["ok"]
 
-    # Formulations and drafts survive reconstruction of the tool facade.
+    # Stored formulations and drafts remain available after recreating HarnessTools.
     tools = HarnessTools(
         CandidateStore(tmp_path / "archive.sqlite"),
         Verifier(executor),
@@ -328,3 +328,34 @@ def test_parameter_optimization_preserves_array_shapes(tmp_path) -> None:
     assert len(optimized["trials"]) == 5
     assert all(isinstance(trial["parameters"]["weights"], list) for trial in optimized["trials"])
     assert all(len(trial["parameters"]["weights"]) == 3 for trial in optimized["trials"])
+
+
+def test_zero_regret_reference_does_not_divide_by_zero(tmp_path):
+    import math
+
+    tools = _tools(tmp_path)
+    candidate = CandidateBundle(
+        name="candidate",
+        contract="feature_map",
+        source="def feature_point(x, parameters): return x",
+    )
+    baseline = candidate.model_copy(update={"name": "baseline", "origin": CandidateOrigin.BASELINE})
+    tools.store.add_candidate(baseline)
+    reference = EvaluationRecord(
+        candidate_id=baseline.candidate_id,
+        score=0.0,
+        negative_log_likelihood=0.0,
+        runtime_seconds=0.1,
+        jitter=0.01,
+        condition_number=1.0,
+        metadata={"bo": {"regret_auc": 0.0, "final_regret": 0.0}},
+    )
+    tools.store.add_evaluation(reference)
+    result = reference.model_copy(
+        update={
+            "candidate_id": candidate.candidate_id,
+            "metadata": {"tasks": [], "bo": {"regret_auc": 1.0, "final_regret": 1.0}},
+        }
+    )
+    enriched = tools._enrich_evaluation(candidate, result)
+    assert math.isfinite(enriched.metadata["selection_score"])

@@ -1,23 +1,38 @@
-# Extending Kernaut
+# Add tasks, model providers, and baselines
 
-Kernaut discovers installed plugins through Python package entry points. A plugin is trusted
-Python code installed in the same environment as Kernaut. Discovery lists metadata without
-importing plugins. Only a selected factory is loaded. Duplicate names produce an error.
-Built-in model provider names are reserved and take precedence over plugin names.
+You can use Kernaut's built-in tasks and model providers without writing an extension.
+An extension is a separate Python package that adds a task, model provider, or baseline to Kernaut.
+For example, a task extension can load your dataset, describe the problem, and score proposed kernels.
+An extension lets you add this behavior without editing Kernaut itself.
 
-## Start from a working example
+## Example extension
 
-In the repository root, after installing Kernaut:
+The repository includes a small extension in `examples/extension`. It provides a sine-wave task,
+a fixed offline model, and a linear reference kernel. After installing Kernaut, run these commands
+from the repository root:
 
 ```bash
 pip install -e examples/extension
 kernaut extensions
 kernaut task-run --task sine --config examples/extension/offline.toml \
-  --baseline linear-demo --archive runs/plugin-demo/archive.sqlite
+  --baseline linear-demo --archive runs/extension-demo/archive.sqlite
 ```
 
-Copy `examples/extension` into your own repository, change the distribution name and module,
-and register unique extension names in `pyproject.toml`:
+The first command installs the example in your Python environment. The second lists the names
+that Kernaut can use. The third runs a search without an API key or network access.
+
+## Register your extension
+
+Each extension provides a function that creates a task, model adapter, or set of baseline kernels.
+This function is called a **factory function**. An **entry point** maps a name, such as
+`my-task`, to that function. Kernaut reads these mappings from installed packages.
+
+To create your own extension:
+
+1. Copy `examples/extension` into your repository.
+2. Change the package name and Python module name.
+3. Implement the functions for the components you want to add.
+4. Register each function under the appropriate group in `pyproject.toml`:
 
 ```toml
 [project.entry-points."kernaut.tasks"]
@@ -30,46 +45,57 @@ my-provider = "my_extension:make_model"
 my-baseline = "my_extension:make_baselines"
 ```
 
-Reinstall your extension after changing entry-point metadata.
+For example, `my_extension:make_task` identifies the `make_task` function in the `my_extension`
+module. You only need the groups that your extension provides. Install the package in the same
+Python environment as Kernaut. Reinstall it after changing the entry-point mappings.
 
-## Task and context interface
+Kernaut lists installed names without importing extension code. It imports the selected
+extension when you use it. If multiple packages register the same selected name, Kernaut reports an error.
+Built-in model provider names take precedence over extension names, so choose a different name.
+Extensions run as trusted Python code. Install only packages that you trust.
 
-`make_task(executor: KernelExecutor, options: dict) -> Task` returns a `kernaut.tasks.Task`.
-Its fields are:
+## Add a task and its context
 
-- `dataset`: training inputs and targets as `Dataset`.
-- `context`: the domain description sent to the proposer.
-- `evaluator`: an object with `evaluate(candidate, dataset) -> EvaluationRecord`.
+`make_task(executor: KernelExecutor, options: dict) -> Task` creates a `kernaut.tasks.Task`.
+The task contains:
+
+- `dataset`: training inputs and targets stored in a `Dataset`.
+- `context`: the domain description sent to the model that proposes kernels.
+- `evaluator`: an object whose `evaluate(candidate, dataset)` method returns an `EvaluationRecord`.
 - `verification_policy`: optional input dimensions and verification settings.
-- `novelty_policy`: optional formulation and novelty workflow settings.
-- `parameter_evaluator`: optional separate training evaluator for parameter tuning.
+- `novelty_policy`: optional settings for recording kernel ideas and checking novelty.
+- `parameter_evaluator`: an optional separate evaluator for tuning parameters on training data.
 
-Use the supplied executor to evaluate candidate kernels. A higher `EvaluationRecord.score`
-must mean a better result, and the record must identify the evaluated candidate. Multi-episode
-evaluators can hold training episodes internally and use a representative dataset for dimensions.
-Keep validation and held-out test evaluation separate from the search task.
+The evaluator determines the kernel method and scoring rule. It can use kernel ridge regression, a support vector machine, or another method.
+Use the supplied `executor` to run candidate kernels. Higher `EvaluationRecord.score` values must
+mean better results. Each record must identify the candidate that it evaluates.
+An evaluator can store multiple training episodes internally. In that case, `dataset` can provide
+representative inputs that specify the input dimensions. Keep validation and held-out test
+evaluation separate from the search task.
 
-Pass task-specific settings as a JSON object with `--options options.json`. Override the
-context with `--context task.md`. Describe units, useful invariances, known structure, and the
-objective. Do not include credentials or held-out test answers in the context.
+Use `--options options.json` to pass task settings as a JSON object. Use `--context task.md` to
+replace the task's context. Describe input units, known structure, the objective, and transformations
+that should leave predictions unchanged. Exclude credentials and held-out test answers.
 
-Python callers can construct a `Task` directly and call `run_task(task, model, store, executor)`.
-The generic runner uses the existing conversational controller. Existing domain commands retain
-the paper's evolutionary workflows and scoring rules.
+In Python, you can create a `Task` directly and call `run_task(task, model, store, executor)`.
+This function uses one model conversation for the search. The built-in domain commands also
+support the paper's evolutionary search workflows and scoring rules.
 
-## Model interface
+## Add a model provider
 
-`make_model(config: ModelConfig) -> LanguageModel` constructs your adapter.
-Subclass `kernaut.llm.base.LanguageModel` and implement:
+`make_model(config: ModelConfig) -> LanguageModel` creates an adapter that connects Kernaut to a
+model provider. Subclass `kernaut.llm.base.LanguageModel` and implement:
 
 ```python
 def complete(self, messages, tools, system_prompt) -> AssistantReply: ...
 ```
 
-Translate provider replies into `AssistantReply` and `RequestedTool`. Preserve tool call IDs so
-results can be matched to requests. Use `config.api_key()` for an explicitly configured
-`api_key_env`, and respect timeout and retry settings. Optional dependencies belong in your
-extension package. Installed model factories also work in ensembles and existing domain commands.
+Convert provider responses to `AssistantReply` and `RequestedTool` objects. Preserve tool call IDs
+so Kernaut can match results to requests. Read credentials with `config.api_key()` after setting
+`api_key_env`. Respect the configured timeout and retry limits. Declare optional dependencies in
+your extension package. Model extensions also work in ensembles and built-in domain commands.
+
+Select your provider in the model configuration:
 
 ```toml
 [llm]
@@ -78,26 +104,32 @@ model = "your-model-id"
 api_key_env = "MY_PROVIDER_API_KEY"
 ```
 
-An OpenAI-compatible server generally needs only an existing provider configuration with its
-`base_url`, without a new adapter.
+An OpenAI-compatible server usually needs only an existing provider configuration with the
+server's `base_url`. It does not usually need a new adapter.
 
-## Baseline interface
+## Add baseline kernels
 
-`make_baselines(task: Task) -> Iterable[CandidateBundle]` supplies candidate programs with
-explicit parameters. Pass one or more `--baseline NAME` options to `task-run`. The runner marks
-these candidates as baselines, verifies them, evaluates them with the task evaluator, and stores
-the evidence and scores. Rejected candidates stop the run before the LLM is called.
+`make_baselines(task: Task) -> Iterable[CandidateBundle]` returns reference kernel programs with
+specified parameters. Pass `--baseline NAME` to `task-run`. Repeat the option to use multiple
+baseline extensions.
 
-These are kernel-program baselines. A full external method such as a neural training pipeline
-needs a separate training and comparison protocol. A plugin does not change
-the trusted kernel construction rules. Use a supported contract for each candidate.
+Kernaut marks the returned candidates as baselines and verifies them before evaluation.
+It then evaluates each candidate with the task evaluator and stores its evidence and score.
+If verification rejects a baseline, Kernaut stops the run before calling the LLM.
+The runner uses the supplied parameters without tuning them.
 
-## Test and package an extension
+These baselines are kernel programs. An external method, such as a neural training pipeline,
+needs its own training and comparison protocol. Extensions do not change the trusted kernel
+construction rules. Use a supported construction contract for each candidate.
 
-Test deterministic task creation, score direction, the baseline verification gate, and model
-response translation. Run an offline end-to-end campaign with a scripted model. Test your built
-wheel in a separate environment because source imports alone cannot check entry-point packaging.
+## Test your extension
 
-The API is experimental in version 0.1. Pin compatible versions in downstream packages.
-Python packaging's [entry-point specification](https://packaging.python.org/en/latest/specifications/entry-points/)
-describes the metadata format.
+Test that task creation is deterministic, higher scores mean better results, and rejected
+baselines cannot reach evaluation. For a model adapter, test the conversion of provider responses.
+Run a complete offline search with a model that returns predefined responses.
+
+Build a wheel, which is Python's installable package format, and test it in a separate environment.
+Importing code from the source directory does not check whether the wheel includes the entry-point
+mappings. The API is experimental in version 0.1. Pin compatible versions in packages that use it.
+The [Python entry-point specification](https://packaging.python.org/en/latest/specifications/entry-points/)
+defines the mapping format.

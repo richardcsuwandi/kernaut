@@ -1,3 +1,5 @@
+const snapshotUrl = document.querySelector('meta[name="kernaut-snapshot"]')?.content;
+
 const state = {
   snapshot: null,
   selectedId: null,
@@ -54,23 +56,25 @@ function toast(message) {
 
 async function load() {
   try {
-    const response = await fetch("/api/snapshot", { cache: "no-store" });
+    const response = await fetch(snapshotUrl || "/api/snapshot", { cache: "no-store" });
     const payload = await response.json();
     if (!response.ok || payload.error) throw new Error(payload.error || `HTTP ${response.status}`);
     const wasOutdated = state.backendOutdated;
     state.backendOutdated = payload.schema_version !== 3;
     state.snapshot = payload;
     if (!state.selectedId || !payload.candidates.some((c) => c.candidate_id === state.selectedId)) {
-      state.selectedId = payload.candidates[0]?.candidate_id || null;
+      state.selectedId = payload.candidates.find((c) => c.candidate_id === payload.demo?.initial_candidate_id)?.candidate_id || payload.candidates[0]?.candidate_id || null;
     }
     $("#live-dot").className = state.backendOutdated ? "live-dot error" : "live-dot ok";
-    $("#sync-label").textContent = state.backendOutdated ? "Restart viewer required" : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+    $("#sync-label").textContent = state.backendOutdated ? "Restart the viewer" : snapshotUrl ? "Fixed research example" : `Synced ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
     render();
+    document.dispatchEvent(new CustomEvent("kernaut:loaded", { detail: payload }));
     if (state.backendOutdated && !wasOutdated) toast("Restart kernaut viz to load the updated archive API");
   } catch (error) {
     $("#live-dot").className = "live-dot error";
     $("#sync-label").textContent = "Archive unavailable";
     toast(error.message);
+    document.dispatchEvent(new CustomEvent("kernaut:load-error"));
   }
 }
 
@@ -103,18 +107,43 @@ function renderList() {
     <button class="candidate-row ${candidate.candidate_id === state.selectedId ? "active" : ""}"
             data-candidate="${escapeHtml(candidate.candidate_id)}" type="button">
       <span class="candidate-name">${candidate.origin === "baseline" ? `<span class="baseline-tag">BASE</span>` : ""}${escapeHtml(candidate.name)}</span>
-      <span class="best-mark" title="Best candidate">${candidate.on_frontier ? "★" : ""}</span>
-      <span class="candidate-id">${shortId(candidate.candidate_id)} · ${escapeHtml(candidate.contract)}</span>
-      <span class="score">${candidate.score === null ? "unscored" : fmt(candidate.score, 3)}${candidate.baseline_delta == null ? "" : ` · Δ ${candidate.baseline_delta >= 0 ? "+" : ""}${fmt(candidate.baseline_delta, 3)}`}</span>
+      <span class="best-mark" ${candidate.on_frontier ? 'title="Best candidate"' : 'aria-hidden="true"'}>${candidate.on_frontier ? "★" : ""}</span>
+      <span class="candidate-id">${shortId(candidate.candidate_id)}, ${escapeHtml(candidate.contract)}</span>
+      <span class="score">${candidate.score === null ? "unscored" : fmt(candidate.score, 3)}${candidate.baseline_delta == null ? "" : `, Δ ${candidate.baseline_delta >= 0 ? "+" : ""}${fmt(candidate.baseline_delta, 3)}`}</span>
     </button>
   `).join("") : `<div class="empty">No candidates match.</div>`;
   $$("[data-candidate]").forEach((button) => button.addEventListener("click", () => {
-    state.selectedId = button.dataset.candidate;
-    renderList();
-    renderCandidate();
-    renderVerification();
-    renderTrace();
+    selectCandidate(button.dataset.candidate);
   }));
+}
+
+function selectCandidate(candidateId, tabName = null) {
+  if (!state.snapshot?.candidates.some((c) => c.candidate_id === candidateId)) return false;
+  state.selectedId = candidateId;
+  state.selectedRun = "all";
+  renderList();
+  renderCandidate();
+  renderVerification();
+  renderTrace();
+  if (tabName) activateTab(tabName);
+  return true;
+}
+
+function bindPlotInteractions(selector) {
+  $$(selector).forEach((node) => {
+    const candidate = state.snapshot.candidates.find((c) => c.candidate_id === node.dataset.plotId);
+    node.setAttribute("role", "button");
+    node.setAttribute("tabindex", "0");
+    node.setAttribute("aria-label", `Inspect ${candidate.name}, score ${fmt(candidate.score)}`);
+    const inspect = () => selectCandidate(node.dataset.plotId, "candidate");
+    node.addEventListener("click", inspect);
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        inspect();
+      }
+    });
+  });
 }
 
 function selectedCandidate() {
@@ -138,11 +167,11 @@ function renderCandidate() {
   panel.innerHTML = `
     <div class="candidate-title">
       <div>
-        <p class="eyebrow">${escapeHtml(candidate.contract)} · ${escapeHtml(candidate.candidate_id)}</p>
+        <p class="eyebrow">${escapeHtml(candidate.contract)}, ${escapeHtml(candidate.candidate_id)}</p>
         <h2>${escapeHtml(candidate.name)}</h2>
         <div class="badges">
           <span class="badge ${candidate.accepted ? "verified" : ""}">${escapeHtml(candidate.tier_label)}</span>
-          ${candidate.origin === "baseline" ? `<span class="badge baseline">standard baseline</span>` : `<span class="badge">discovered</span>`}
+          ${candidate.origin === "baseline" ? `<span class="badge baseline">baseline</span>` : `<span class="badge">discovered</span>`}
           ${candidate.accepted ? `<span class="badge verified">accepted</span>` : `<span class="badge">not accepted</span>`}
           ${candidate.on_frontier ? `<span class="badge best">★ Best candidate</span>` : ""}
         </div>
@@ -152,7 +181,7 @@ function renderCandidate() {
       ${metric("Score ↑", fmt(evaluation.score))}
       ${metric("Negative log likelihood ↓", fmt(evaluation.negative_log_likelihood))}
       ${metric("Vs best baseline ↑", candidate.baseline_delta == null ? "—" : `${candidate.baseline_delta >= 0 ? "+" : ""}${fmt(candidate.baseline_delta)}`)}
-      ${metric("Reference baseline", baseline ? `${baseline.name} · ${fmt(baseline.score, 3)}` : "—")}
+      ${metric("Reference baseline", baseline ? `${baseline.name}, ${fmt(baseline.score, 3)}` : "—")}
       ${metric("Runtime", evaluation.runtime_seconds == null ? "—" : `${fmt(evaluation.runtime_seconds, 3)} s`)}
       ${metric("Condition number", fmt(evaluation.condition_number, 3))}
       ${metric("Evidence tier", candidate.tier == null ? "—" : `T${candidate.tier}`)}
@@ -173,8 +202,12 @@ function renderCandidate() {
     </div>
   `;
   $("#copy-source")?.addEventListener("click", async () => {
-    await navigator.clipboard.writeText(candidate.source);
-    toast("Source copied");
+    try {
+      await navigator.clipboard.writeText(candidate.source);
+      toast("Source copied");
+    } catch {
+      toast("Copy is unavailable. Select the source text to copy it.");
+    }
   });
 }
 
@@ -251,13 +284,13 @@ function renderVerification() {
   panel.innerHTML = `
     <header class="verification-head">
       <div>
-        <p class="eyebrow">${escapeHtml(candidate.contract)} · ${shortId(candidate.candidate_id)}</p>
+        <p class="eyebrow">${escapeHtml(candidate.contract)}, ${shortId(candidate.candidate_id)}</p>
         <h2>${escapeHtml(candidate.name)}</h2>
         <p>Evidence for the kernel constructor, its runtime behavior, and its formal proof boundary.</p>
       </div>
       <div class="assurance-result ${candidate.accepted ? "accepted" : "rejected"}">
         <span>${candidate.accepted ? "Accepted" : "Not accepted"}</span>
-        <strong>${achievedTier >= 0 ? `T${achievedTier} · ${tierName}` : "No evidence tier"}</strong>
+        <strong>${achievedTier >= 0 ? `T${achievedTier}, ${tierName}` : "No evidence tier"}</strong>
       </div>
     </header>
 
@@ -289,7 +322,7 @@ function renderVerification() {
 
     <footer class="verification-footnote">
       <strong>How to read this</strong>
-      <p>Tier 2 means the candidate uses a restricted certificate interface and the trusted interpreter owns the PSD-preserving construction. Randomized checks provide diagnostics; kernel validity follows by construction, conditional on the correctness of the interpreter.</p>
+      <p>A Tier 2 candidate uses a restricted certificate interface. The trusted interpreter applies construction rules that preserve positive semidefiniteness (PSD). Randomized checks provide diagnostics. Kernel validity follows from the construction rules and depends on the correctness of the interpreter.</p>
     </footer>`;
 }
 
@@ -324,7 +357,7 @@ function renderLandscape() {
   }).join("");
   const referenceLine = baseline ? `
     <line class="baseline-reference" x1="${margin.left}" y1="${y(baseline.score)}" x2="${width - margin.right}" y2="${y(baseline.score)}" />
-    <text class="baseline-label" x="${width - margin.right - 4}" y="${y(baseline.score) - 7}" text-anchor="end">Best standard · ${fmt(baseline.score, 3)}</text>` : "";
+    <text class="baseline-label" x="${width - margin.right - 4}" y="${y(baseline.score) - 7}" text-anchor="end">Best baseline, ${fmt(baseline.score, 3)}</text>` : "";
   const dots = points.map((point) => {
     const px = x(point.runtime_seconds);
     const py = y(point.score);
@@ -340,7 +373,7 @@ function renderLandscape() {
     return `
     <g data-plot-id="${escapeHtml(point.candidate_id)}">
       ${marker}
-        <title>${escapeHtml(point.name)} · score ${fmt(point.score)} · ${fmt(point.runtime_seconds, 3)}s</title>
+        <title>${escapeHtml(point.name)}, score ${fmt(point.score)}, ${fmt(point.runtime_seconds, 3)}s</title>
       ${markerClose}
       <text class="plot-label" x="${labelX}" y="${labelY}" text-anchor="${alignRight ? "end" : "start"}">${escapeHtml(point.name)}</text>
     </g>`;
@@ -348,7 +381,7 @@ function renderLandscape() {
   panel.innerHTML = `
     <div class="plot-heading">
       <strong>Candidate performance</strong>
-      <span>Discovered programs relative to tuned standard kernels</span>
+      <span>Discoveries and baseline kernels on the same score and runtime axes</span>
     </div>
     <div class="plot-card">
       <svg id="pareto-plot" viewBox="0 0 ${width} ${height}" role="img" aria-label="Candidate score versus runtime">
@@ -356,22 +389,15 @@ function renderLandscape() {
         ${referenceLine}
         <line class="plot-axis" x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" />
         <line class="plot-axis" x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${height - margin.bottom}" />
-        <text class="axis-title" x="${width / 2}" y="${height - 10}" text-anchor="middle">Runtime (seconds) · lower is better</text>
-        <text class="axis-title" transform="translate(16 ${height / 2}) rotate(-90)" text-anchor="middle">Score · higher is better</text>
+        <text class="axis-title" x="${width / 2}" y="${height - 10}" text-anchor="middle">Runtime (seconds), lower is better</text>
+        <text class="axis-title" transform="translate(16 ${height / 2}) rotate(-90)" text-anchor="middle">Score, higher is better</text>
         <text class="axis-label" x="${margin.left}" y="${height - margin.bottom + 20}">${fmt(xmin, 3)}</text>
         <text class="axis-label" x="${width - margin.right}" y="${height - margin.bottom + 20}" text-anchor="end">${fmt(xmax, 3)}</text>
         ${dots}
       </svg>
-      <div class="legend"><span><b>★</b> best</span><span><i class="baseline-key"></i>standard baseline</span><span><i style="background:#31b487"></i>discovered</span><span>Dot size indicates evidence strength</span></div>
+      <div class="legend"><span><b>★</b> best</span><span><i class="baseline-key"></i>baseline</span><span><i style="background:#31b487"></i>discovered</span><span>Dot size indicates evidence strength</span></div>
     </div>`;
-  $$('[data-plot-id]').forEach((node) => node.addEventListener("click", () => {
-    state.selectedId = node.dataset.plotId;
-    activateTab("candidate");
-    renderList();
-    renderCandidate();
-    renderVerification();
-    renderTrace();
-  }));
+  bindPlotInteractions("#pareto-plot [data-plot-id]");
 }
 
 function renderProgress() {
@@ -431,8 +457,8 @@ function renderProgress() {
       : `<circle class="point ${isKept ? "kept-point" : "discarded-point"}" cx="${px}" cy="${py}" r="${isKept ? 6 : 3.2}" fill="${color}"></circle>`;
     const tooltip = [
       `${step.name}`,
-      `score ${fmt(step.score)} · #${step.index + 1}${isKept && step.origin !== "baseline" ? " · new best" : ""}`,
-      `${step.label}${step.niche ? ` · ${step.niche}` : ""}`,
+      `score ${fmt(step.score)}, #${step.index + 1}${isKept && step.origin !== "baseline" ? ", new best" : ""}`,
+      `${step.label}${step.niche ? `, ${step.niche}` : ""}`,
       step.novelty_distance != null ? `novelty distance ${fmt(step.novelty_distance, 3)}` : "",
       step.change_note,
     ].filter(Boolean).join("\n");
@@ -450,36 +476,29 @@ function renderProgress() {
 
   panel.innerHTML = `
     <div class="plot-heading">
-      <strong>Discovery progress: ${scored.length} experiments, ${kept.filter((step) => step.origin !== "baseline").length} kept improvements</strong>
-      <span>Chronological evaluation history with the running-best frontier</span>
+      <strong>Discovery progress: ${scored.length} scored candidates</strong>
+      <span>Latest scores in candidate submission order</span>
     </div>
     <div class="plot-card">
-      <svg id="progress-plot" viewBox="0 0 ${width} ${height}" role="img" aria-label="Score progression over evaluations">
+      <svg id="progress-plot" viewBox="0 0 ${width} ${height}" role="img" aria-label="Latest candidate scores in submission order">
         ${grid}
         ${bestPath}
         <line class="plot-axis" x1="${margin.left}" y1="${height - margin.bottom}" x2="${width - margin.right}" y2="${height - margin.bottom}" />
         <line class="plot-axis" x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${height - margin.bottom}" />
-        <text class="axis-title" x="${width / 2}" y="${height - 12}" text-anchor="middle">Experiment # · chronological</text>
-        <text class="axis-title" transform="translate(16 ${height / 2}) rotate(-90)" text-anchor="middle">Score · higher is better</text>
+        <text class="axis-title" x="${width / 2}" y="${height - 12}" text-anchor="middle">Candidate #, submission order</text>
+        <text class="axis-title" transform="translate(16 ${height / 2}) rotate(-90)" text-anchor="middle">Score, higher is better</text>
         <text class="axis-label" x="${margin.left}" y="${height - margin.bottom + 20}">1</text>
         <text class="axis-label" x="${width - margin.right}" y="${height - margin.bottom + 20}" text-anchor="end">${scored.length}</text>
         ${points}
       </svg>
       <div class="legend">
         <span><i style="background:#31b487"></i>new best</span>
-        <span><i style="background:#9aa1a9"></i>discarded</span>
-        <span><i class="baseline-key"></i>standard baseline</span>
+        <span><i style="background:#9aa1a9"></i>other candidate</span>
+        <span><i class="baseline-key"></i>baseline</span>
         <span>Click a marker to open the candidate</span>
       </div>
     </div>`;
-  $$("#progress-plot [data-plot-id]").forEach((node) => node.addEventListener("click", () => {
-    state.selectedId = node.dataset.plotId;
-    activateTab("candidate");
-    renderList();
-    renderCandidate();
-    renderVerification();
-    renderTrace();
-  }));
+  bindPlotInteractions("#progress-plot [data-plot-id]");
   layoutProgressAnnotations();
 }
 
@@ -526,7 +545,7 @@ function eventText(event) {
     if (typeof result === "object" && result !== null) return JSON.stringify(result, null, 2);
     return event.content;
   }
-  const calls = (event.tool_calls || []).map((call) => `${call.name}(${JSON.stringify(call.arguments)})`).join("\n");
+  const calls = (event.tool_calls || []).map((call) => `${call.name}(${JSON.stringify(call.arguments, null, 2)})`).join("\n");
   return [event.content, calls].filter(Boolean).join("\n");
 }
 
@@ -538,17 +557,17 @@ function renderTrace() {
     return;
   }
   if (candidate.origin === "baseline") {
-    panel.innerHTML = `<div class="trace-empty"><span class="trace-empty-icon">BASE</span><strong>No agent trace</strong><p>Standard baselines are tuned, verified, and evaluated deterministically before synthesis starts.</p></div>`;
+    panel.innerHTML = `<div class="trace-empty"><span class="trace-empty-icon">BASE</span><strong>No agent trace</strong><p>Baseline kernels are evaluated as reference methods. They do not have agent conversations.</p></div>`;
     return;
   }
   if (state.backendOutdated) {
-    panel.innerHTML = `<div class="trace-empty"><span class="trace-empty-icon backend">RESTART</span><strong>Updated viewer backend required</strong><p>The running server predates candidate-linked traces. Stop it and start <code>kernaut viz</code> again.</p></div>`;
+    panel.innerHTML = `<div class="trace-empty"><span class="trace-empty-icon backend">RESTART</span><strong>Updated viewer backend required</strong><p>This server version cannot link run events to candidates. Stop the server and start <code>kernaut viz</code> again.</p></div>`;
     return;
   }
   const runIds = new Set(candidate.run_ids || []);
   const runs = state.snapshot.runs.filter((run) => runIds.has(run.run_id));
   if (!runs.length) {
-    panel.innerHTML = `<div class="empty">No trace events are linked to this candidate.</div>`;
+    panel.innerHTML = `<div class="empty">${snapshotUrl ? "No recorded conversation is linked to this candidate." : "No trace events are linked to this candidate."}</div>`;
     return;
   }
   if (state.selectedRun === "all" || !runs.some((run) => run.run_id === state.selectedRun)) {
@@ -559,11 +578,12 @@ function renderTrace() {
     (event.candidate_ids || []).includes(candidate.candidate_id)
   ).length;
   panel.innerHTML = `
-    <div class="trace-heading"><div><strong>${escapeHtml(candidate.name)}</strong><span>${events.length} campaign events · ${linkedEventCount} linked to candidate</span></div></div>
+    ${snapshotUrl ? `<p class="prose">${escapeHtml(state.snapshot.demo?.trace_note || "Recorded campaign conversation.")}</p>` : ""}
+    <div class="trace-heading"><div><strong>${escapeHtml(candidate.name)}</strong><span>${events.length} campaign events, ${linkedEventCount} linked to candidate</span></div></div>
     <div class="run-select"><span class="eyebrow" style="margin:0">Campaign</span>
       <select id="run-select">${runs.map((run) => {
         const count = state.snapshot.events.filter((event) => event.run_id === run.run_id).length;
-        return `<option value="${escapeHtml(run.run_id)}" ${run.run_id === state.selectedRun ? "selected" : ""}>${shortId(run.run_id)} · ${count} campaign events · seed ${run.seed}</option>`;
+        return `<option value="${escapeHtml(run.run_id)}" ${run.run_id === state.selectedRun ? "selected" : ""}>${shortId(run.run_id)}, ${count} campaign events, seed ${run.seed}</option>`;
       }).join("")}</select>
     </div>
     <div class="timeline">${events.map((event) => `
@@ -588,6 +608,7 @@ function activateTab(name) {
   if (name === "progress" && state.snapshot) renderProgress();
   if (name === "verification" && state.snapshot) renderVerification();
   if (name === "trace" && state.snapshot) renderTrace();
+  document.dispatchEvent(new CustomEvent("kernaut:tab-changed", { detail: name }));
 }
 
 $("#search").addEventListener("input", (event) => {
@@ -603,11 +624,12 @@ $("#refresh").addEventListener("click", load);
 $("#theme-toggle").addEventListener("click", () => setTheme(currentTheme() === "dark" ? "light" : "dark"));
 $$(".tab").forEach((tab) => tab.addEventListener("click", () => activateTab(tab.dataset.tab)));
 
+window.KernautViewer = Object.freeze({ selectCandidate, showTab: activateTab });
 setTheme(currentTheme());
 const initialTab = window.location.hash.replace("#", "");
 activateTab(["candidate", "verification", "landscape", "progress", "trace"].includes(initialTab) ? initialTab : "candidate");
 load();
-state.timer = setInterval(load, 3000);
+if (!snapshotUrl) state.timer = setInterval(load, 3000);
 
 let resizeTimer;
 window.addEventListener("resize", () => {

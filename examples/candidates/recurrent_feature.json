@@ -2,7 +2,10 @@
   "name": "stable_recurrent_features",
   "contract": "feature_map",
   "source": "import numpy as np\n\ndef feature_point(x, parameters):\n    width = int(parameters.get('width', 8))\n    decay = float(parameters.get('decay', 0.7))\n    state = np.zeros(width)\n    for j in range(width):\n        state[j] = np.sum(np.tanh((j + 1) * x))\n        if j:\n            state[j] += decay * state[j - 1]\n    return state / np.sqrt(width)\n",
-  "parameters": {"width": 8, "decay": 0.7},
+  "parameters": {
+    "width": 8,
+    "decay": 0.7
+  },
   "parents": [],
-  "rationale": "A compact recurrent multiscale embedding used as an offline smoke candidate."
+  "rationale": "A compact recurrent embedding that represents multiple scales and serves as an offline example."
 }

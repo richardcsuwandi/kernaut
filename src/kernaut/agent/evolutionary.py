@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import random
 from dataclasses import dataclass
 
@@ -42,7 +43,7 @@ class EvolutionResult(BaseModel):
 
 
 class QualityDiversityArchive:
-    """Behavior-oriented elite view over the durable candidate archive."""
+    """Select the best archived candidates within groups of similar kernel behavior."""
 
     def __init__(self, store: CandidateStore) -> None:
         self.store = store
@@ -56,6 +57,9 @@ class QualityDiversityArchive:
             evaluation = self.store.latest_evaluation(str(row["candidate_id"]))
             if candidate is None or evaluation is None:
                 continue
+            score = evaluation.metadata.get("selection_score", evaluation.score)
+            if score is None or not math.isfinite(float(score)):
+                continue
             descriptors = evaluation.metadata.get("quality_descriptors", {})
             cell = (
                 str(descriptors.get("construction_niche", candidate.contract.value)),
@@ -64,7 +68,7 @@ class QualityDiversityArchive:
             )
             elite = Elite(
                 candidate=candidate,
-                selection_score=float(evaluation.metadata.get("selection_score", evaluation.score)),
+                selection_score=float(score),
                 cell=cell,
             )
             previous = by_cell.get(cell)
@@ -96,7 +100,10 @@ class QualityDiversityArchive:
 
 
 class EvolutionarySynthesisController:
-    """Runs fresh, bounded synthesis campaigns sampled from a quality-diversity archive."""
+    """Run new searches within fixed budgets, using candidates from the archive.
+
+    The archive retains candidates with high scores and different kernel behaviors.
+    """
 
     def __init__(
         self,

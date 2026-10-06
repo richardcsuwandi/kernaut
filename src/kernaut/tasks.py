@@ -1,4 +1,4 @@
-"""Public interfaces for task, context, evaluator, and baseline extensions."""
+"""Define how extensions supply tasks, context, evaluators, and baseline kernels."""
 
 from __future__ import annotations
 
@@ -27,10 +27,10 @@ class CandidateEvaluator(Protocol):
 
 @dataclass(frozen=True)
 class Task:
-    """A task's training data, proposer context, and deterministic evaluator.
+    """Group training data, model context, and a deterministic evaluator for a task.
 
-    Keep held-out test data outside this object. An episodic evaluator can keep
-    training episodes internally and use dataset only as a representative input.
+    Keep held-out test data outside this object. An evaluator can store training
+    episodes internally and use ``dataset`` only for representative inputs.
     """
 
     dataset: Dataset
@@ -68,10 +68,11 @@ def run_task(
     baselines: Iterable[CandidateBundle] = (),
     run_id: str | None = None,
 ) -> CampaignResult:
-    """Run a conversational search with the same verification gate as built-in tasks.
+    """Run one model conversation using the verification checks of built-in tasks.
 
-    Baseline candidates are verified before evaluation. This API does not retune
-    supplied baseline parameters or reproduce the paper's evolutionary protocol.
+    Verify each baseline before evaluation. Use the supplied baseline parameters
+    without tuning them. This function does not reproduce the paper's evolutionary
+    search protocol.
     """
     task.dataset.arrays()
     if not task.context.strip():

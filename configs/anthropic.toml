@@ -1,4 +1,5 @@
-# Anthropic API. Reads the key from ANTHROPIC_API_KEY. Requires `pip install -e ".[anthropic]"`.
+# Use the Anthropic API with a key from ANTHROPIC_API_KEY.
+# First install the client with `pip install -e ".[anthropic]"`.
 [llm]
 provider = "anthropic"
 model = "claude-sonnet-5"

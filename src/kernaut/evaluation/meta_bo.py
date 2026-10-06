@@ -31,7 +31,9 @@ class TaskSpec:
 
 @dataclass(frozen=True)
 class ProceduralTask:
-    """A deterministic, hidden coordinate transformation of a BO function."""
+    """Apply a deterministic, hidden coordinate transformation to a Bayesian optimization
+    (BO) function.
+    """
 
     spec: TaskSpec
     seed: int
@@ -153,11 +155,12 @@ def procedural_tasks(split: MetaSplit, episodes_per_family: int = 2) -> list[Pro
 
 
 class MetaKernelEvaluator:
-    """Cross-task predictive fitness used during kernel evolution.
+    """Score predictive performance across tasks during kernel evolution.
 
-    The evaluator fits only an outer covariance amplitude and diagonal noise. Candidate-specific
-    parameters remain part of the synthesized program. Fitness is mean held-out CRPS across
-    procedural task episodes; higher scores are better, hence the returned score is negative CRPS.
+    Fit only an outer covariance amplitude and diagonal noise. Candidate-specific
+    parameters remain part of the generated program. Measure performance with the
+    mean held-out continuous ranked probability score (CRPS) across generated task
+    episodes. Return negative CRPS so higher scores indicate better predictions.
     """
 
     def __init__(
@@ -292,7 +295,7 @@ class MetaKernelEvaluator:
 
 
 class MetaBOBenchmark:
-    """Short fixed-protocol BO rollouts for frozen-kernel generalization tests."""
+    """Test fixed kernels on short Bayesian optimization runs with a fixed protocol."""
 
     def __init__(
         self,
@@ -386,7 +389,7 @@ class MetaBOBenchmark:
 
 
 class MetaSearchEvaluator:
-    """Full evolutionary fitness: predictive quality plus short training-only BO rollouts."""
+    """Combine predictive performance with short Bayesian optimization runs on training tasks."""
 
     def __init__(self, predictive: MetaKernelEvaluator, bo_benchmark: MetaBOBenchmark) -> None:
         self.predictive = predictive

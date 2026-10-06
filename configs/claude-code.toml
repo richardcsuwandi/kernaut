@@ -1,5 +1,6 @@
 [llm]
-# Uses your logged-in Claude (claude login) subscription; no API key needed. Empty model = CLI default.
+# Use the subscription account signed in through `claude login`. No API key is needed.
+# An empty model value selects the CLI default.
 provider = "claude-code"
 model = "sonnet"
 timeout_seconds = 600.0

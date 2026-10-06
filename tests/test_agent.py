@@ -158,3 +158,67 @@ def test_campaign_resume_skips_a_completed_checkpoint(tmp_path) -> None:
     assert result.rounds == 1
     assert result.tool_calls == 0
     assert len(store.load_events("completed-run")) == 2
+
+
+def test_resume_recovers_only_missing_replies_in_a_tool_batch(tmp_path):
+    import json
+
+    store = CandidateStore(tmp_path / "archive.sqlite")
+    messages = [
+        ConversationMessage(role="user", content="Find a kernel"),
+        ConversationMessage(
+            role="assistant",
+            tool_calls=[
+                RequestedTool(call_id="done", name="query_archive", arguments={"view": "recent"}),
+                RequestedTool(
+                    call_id="pending", name="query_archive", arguments={"view": "recent"}
+                ),
+            ],
+        ),
+        ConversationMessage(role="tool", content='{"ok": true}', tool_call_id="done"),
+    ]
+    for i, message in enumerate(messages):
+        store.append_event("partial", i, message.model_dump(mode="json"))
+
+    class CheckRecovery(LanguageModel):
+        def complete(self, messages, tools, system_prompt):
+            replies = [m for m in messages if m.role == "tool"]
+            assert [m.tool_call_id for m in replies] == ["done", "pending"]
+            assert json.loads(replies[0].content)["ok"]
+            assert "retry" in json.loads(replies[1].content)["error"]
+            return AssistantReply(content="Recovered")
+
+    executor = SubprocessExecutor()
+    tools = HarnessTools(
+        store, Verifier(executor), GaussianProcessEvaluator(executor), Dataset(x=[[0.0]], y=[0.0])
+    )
+    result = SynthesisController(CheckRecovery(), tools, store).run("ignored", run_id="partial")
+    assert result.final_message == "Recovered"
+    assert len(store.load_events("partial")) == 5
+
+
+def test_tool_exceptions_and_unknown_names_are_valid_json(tmp_path):
+    import json
+    from types import SimpleNamespace
+
+    def fail():
+        raise ValueError('bad "quoted" value\nnext line')
+
+    class CheckErrors(LanguageModel):
+        def complete(self, messages, tools, system_prompt):
+            if messages[-1].role == "user":
+                return AssistantReply(
+                    tool_calls=[
+                        RequestedTool(call_id="a", name="fail", arguments={}),
+                        RequestedTool(call_id="b", name='unknown"tool', arguments={}),
+                    ]
+                )
+            replies = [json.loads(m.content) for m in messages if m.role == "tool"]
+            assert len(replies) == 2
+            assert all(reply["ok"] is False for reply in replies)
+            assert '"quoted"' in replies[0]["error"]
+            return AssistantReply(content="Done")
+
+    store = CandidateStore(tmp_path / "archive.sqlite")
+    tools = SimpleNamespace(schemas=[], handlers={"fail": fail})
+    SynthesisController(CheckErrors(), tools, store).run("go")

@@ -1,8 +1,9 @@
-"""Run the loop through a logged-in `claude` or `codex` CLI so it bills the subscription.
+"""Send model requests through a signed-in ``claude`` or ``codex`` CLI subscription.
 
-Neither CLI exposes custom function calling, so tools are described in the prompt and the
-reply is forced into a JSON schema of {content, tool_calls[{name, arguments_json}]}.
-Each call is stateless: the whole transcript is re-sent every turn.
+Neither CLI exposes custom function calling. Instead, the prompt describes the
+tools, and each reply must follow this JSON schema:
+{content, tool_calls[{name, arguments_json}]}.
+Each request is stateless, so the adapter sends the full transcript on every turn.
 """
 
 from __future__ import annotations
@@ -66,7 +67,7 @@ def render_transcript(messages: list[ConversationMessage]) -> str:
 
 def parse_reply(raw: Any) -> AssistantReply:
     if isinstance(raw, str):
-        # codex -o can repeat the final message; take the first JSON object.
+        # codex -o can repeat the final message. Read only the first JSON object.
         raw, _ = json.JSONDecoder().raw_decode(raw.strip())
     calls = [
         RequestedTool(
@@ -124,7 +125,8 @@ class SubscriptionCLIModel(LanguageModel):
             except (subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError) as error:
                 if attempt == self.max_retries:
                     raise
-                # Back off so a rate-limit burst or network blip does not end the campaign.
+                # Wait before retrying so a brief rate limit or network failure does not end the
+                # campaign.
                 delay = RETRY_BASE_SECONDS * 2**attempt
                 print(
                     f"[llm] {self.provider} call failed ({error}); retrying in {delay:.0f}s",
@@ -135,7 +137,7 @@ class SubscriptionCLIModel(LanguageModel):
         raise AssertionError("unreachable")
 
     def _run(self, command: list[str], stdin: str, cwd: str, drop_env: str) -> str:
-        # Drop the API key so the CLI falls back to its subscription login.
+        # Remove the API key so the CLI uses the signed-in subscription account.
         env = {key: value for key, value in os.environ.items() if key != drop_env}
         result = subprocess.run(
             command,
@@ -147,7 +149,8 @@ class SubscriptionCLIModel(LanguageModel):
             timeout=self.timeout_seconds,
         )
         if result.returncode != 0:
-            # The CLI explains failures (usage limits, auth, API errors) on stdout or stderr.
+            # The CLI reports usage limits, authentication failures, and API errors on stdout or
+            # stderr.
             detail = (result.stderr.strip() or result.stdout.strip())[-500:]
             raise subprocess.SubprocessError(
                 f"{command[0]} exited with status {result.returncode}: {detail}"
@@ -174,7 +177,8 @@ class SubscriptionCLIModel(LanguageModel):
         reply = parse_reply(payload.get("structured_output") or payload["result"])
         usage = payload.get("usage") or {}
         reply.usage = {
-            # The CLI caches the resent transcript, so most input lands in the cache fields.
+            # The CLI caches the transcript sent on each turn. Most input tokens appear in cache
+            # fields.
             "input_tokens": sum(
                 usage.get(key) or 0
                 for key in (

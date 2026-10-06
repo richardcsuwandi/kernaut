@@ -139,11 +139,12 @@ class Verifier:
     def _check_contract_conformance(
         self, candidate: CandidateBundle, rng: np.random.Generator
     ) -> CheckResult:
-        """Check that the observable kernel is independent of batch representation.
+        """Check that the kernel does not depend on how inputs are grouped into a batch.
 
-        A PSD wrapper alone is insufficient: a candidate could make a feature row
-        depend on unrelated members of the batch. These metamorphic checks exercise
-        the kernel contract without moving candidate values out of the subprocess.
+        A PSD-preserving wrapper alone cannot establish this independence. A candidate
+        could make one feature row depend on unrelated points in the batch. These checks
+        change the batch representation and compare the resulting kernels. Candidate
+        values remain inside the subprocess.
         """
         relation_errors: dict[str, float] = {
             "determinism": 0.0,

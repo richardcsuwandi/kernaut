@@ -1,16 +1,19 @@
-"""GlucoseBench adapter: CGM forecasting of meal and insulin interventions.
+"""Connect GlucoseBench to forecasting from a continuous glucose monitor (CGM).
 
-GlucoseBench (a modification of the simglucose UVA/Padova type-1 diabetes model)
-asks a learner to forecast one simulated patient's CGM response to a new meal/bolus
-intervention from that patient's six training episodes and a 45-minute prefix of the query.
+GlucoseBench modifies the simglucose UVA/Padova type-1 diabetes model. A learner
+forecasts one simulated patient's CGM response to a new meal and insulin bolus.
+The learner receives six training episodes and the first 45 minutes of the query
+episode.
 
-A GP input is one CGM reading, encoded as five coordinates in [0, 1]: reading time and the
-episode's delivered intervention (meal grams, meal start, bolus units, bolus start). The
-kernel therefore decides how readings share strength across time and across interventions.
-Search and validation never touch sealed test outcomes: each patient contributes
-leave-one-training-episode-out folds, so every held-out target is a public training episode.
-Kernels are searched on children and validated on adolescents. Sealed adult testing requires
-the external GlucoseBench evaluator and is separate from this training-data adapter.
+Each Gaussian process (GP) input represents one CGM reading with five coordinates
+in [0, 1]. These encode reading time, meal amount, meal start, bolus amount, and
+bolus start. The kernel controls how readings share information across time and
+interventions.
+
+Search and validation exclude hidden test outcomes. Each patient contributes folds
+that hold out one public training episode at a time. Search uses children, and
+validation uses adolescents. Evaluation on hidden adult test data requires the
+external GlucoseBench evaluator and is separate from this adapter.
 """
 
 from __future__ import annotations
@@ -51,10 +54,10 @@ GLUCOSE_SPLITS: dict[str, tuple[str, ...]] = {
 
 
 def intervention(episode: dict[str, Any]) -> tuple[float, float, float, float]:
-    """Delivered meal grams, meal start, bolus units, bolus start from the public input log.
+    """Return meal amount, meal start, bolus amount, and bolus start from the input log.
 
-    With no bolus the start time is irrelevant, so it is set to the meal start rather than
-    left arbitrary.
+    If the bolus is zero, its start time has no effect. Set that time to the meal
+    start instead of leaving it arbitrary.
     """
     inputs = np.asarray(episode["minute_inputs"], dtype=np.float64)
     minutes, meal, bolus = inputs[:, 0], inputs[:, 1], inputs[:, 3]
@@ -77,7 +80,7 @@ def encode(episode: dict[str, Any], times: NDArray[np.float64]) -> NDArray[np.fl
 
 
 def passive_scale(training: list[dict[str, Any]]) -> float:
-    """GlucoseBench CGM normalizer: variance over the two passive episodes, floored at 1."""
+    """Compute the CGM variance over the two passive episodes, with a minimum value of 1."""
     values = np.concatenate([np.asarray(e["cgm_mg_dl"], dtype=np.float64) for e in training[:2]])
     return max(float(values.var()), 1.0)
 
@@ -91,11 +94,11 @@ def gp_forecast(
     amplitude_grid: tuple[float, ...],
     noise_grid: tuple[float, ...],
 ) -> tuple[NDArray[np.float64], NDArray[np.float64], tuple[float, float, float, float]]:
-    """Fit amplitude/noise on full training episodes only, then condition on them plus the prefix.
+    """Fit amplitude and noise on full training episodes, then condition on the query prefix.
 
-    Targets are standardized by the fitting episodes, so the query prefix updates the
-    predictive state without tuning anything, as the GlucoseBench protocol requires.
-    Returns mean and variance on the original scale plus the fit tuple.
+    Use the training episodes to standardize targets. Condition on those episodes
+    and the observed query prefix without further parameter tuning, as required by
+    GlucoseBench. Return the mean and variance on the original scale, plus the fit tuple.
     """
     center, spread = float(y[fit_index].mean()), max(float(y[fit_index].std()), 1e-6)
     z = (y - center) / spread
@@ -118,7 +121,7 @@ def load_training(path: Path) -> dict[str, list[dict[str, Any]]]:
 
 
 class GlucoseKernelEvaluator:
-    """Leave-one-training-episode-out CGM forecasting across GlucoseBench patients."""
+    """Evaluate CGM forecasts by holding out one training episode at a time for each patient."""
 
     def __init__(
         self,
@@ -151,7 +154,7 @@ class GlucoseKernelEvaluator:
         for patient, episodes in self.patients.items():
             try:
                 rows = self._evaluate_patient(candidate, patient, episodes)
-            except Exception as error:  # A kernel failure costs every fold of that patient.
+            except Exception as error:  # Apply the failure penalty to every fold for this patient.
                 failures += [
                     {"task": f"{patient}:loto-{j}", "error": f"{type(error).__name__}: {error}"}
                     for j in range(len(episodes))
@@ -204,7 +207,8 @@ class GlucoseKernelEvaluator:
                 "successful_tasks": len(results),
                 "failed_tasks": len(failures),
                 "mean_crps": aggregate_crps,
-                # GlucoseBench aggregation: arithmetic within patient, geometric across patients.
+                # Use the arithmetic mean within each patient and the geometric mean across
+                # patients.
                 "geomean_cgm_nmse": _patient_geomean(results, nmse),
                 "mean_nlpd": _mean_or_penalty(results, "nlpd", self.failure_penalty, count),
                 "mean_rmse": _mean_or_penalty(results, "rmse", self.failure_penalty, count),
@@ -278,7 +282,7 @@ def _patient_geomean(results: list[PredictiveTaskResult], nmse: list[float]) -> 
 
 
 def glucose_baseline_candidates() -> list[CandidateBundle]:
-    """Normalized-input reference kernels for the GlucoseBench adapter."""
+    """Create reference kernels for normalized GlucoseBench inputs."""
     prefix, rationale = "glucose_", "Fixed normalized-input reference for GlucoseBench."
     return [
         candidate.model_copy(
