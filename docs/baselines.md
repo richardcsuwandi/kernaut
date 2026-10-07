@@ -1,4 +1,4 @@
-# Baseline comparisons
+# Baselines
 
 Compare discovered kernels with reference kernels on the same task and evaluator.
 Keep preprocessing, training data, and evaluation budgets consistent.

@@ -29,6 +29,7 @@ theme:
         icon: material/weather-sunny
         name: Switch to light mode
   features:
+    - navigation.sections
     - navigation.top
     - navigation.footer
     - search.suggest
@@ -71,12 +72,14 @@ validation:
 nav:
   - Overview: index.md
   - Installation: getting-started.md
-  - Benchmarks: tasks.md
-  - Meta-evaluation: meta-evaluation.md
-  - Custom regression: your-problem.md
-  - Custom benchmarks: custom-benchmarks.md
-  - Baseline comparisons: baselines.md
-  - Archive visualization: visualize.md
+  - Benchmarks:
+      - Built-in benchmarks: tasks.md
+      - Custom regression: your-problem.md
+      - Custom benchmarks: custom-benchmarks.md
+  - Evaluation:
+      - Meta-evaluation: meta-evaluation.md
+      - Baselines: baselines.md
+      - Archive visualization: visualize.md
   - Contributions: contributing.md
   - Reference:
       - Extension API: extensions.md
