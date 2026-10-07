@@ -1,14 +1,14 @@
-<p align="center">
-  <img src="assets/kernaut-logo.svg" alt="Kernaut: Kernel Autoresearch" width="720">
-</p>
-
 # Kernel Autoresearch for Open-Ended Model Discovery
 
 Kernels encode the inductive biases of a wide range of machine learning models, and the choice of kernel largely determines what a model can learn from limited data.
 **Kernel Autoresearch (Kernaut)** treats kernel design as open-ended program synthesis. Coding agents write kernels as programs, and construction contracts ensure that every accepted kernel is valid.
-Meta-evaluators measure how useful each kernel is, and an archive records every program with its parameters, verification evidence, and results.
+A quality-diversity archive keeps strong kernels with distinct behaviors, and meta-evaluators test whether the discoveries generalize to tasks that the search never saw.
 
-The name combines *kernel* and *astronaut*: Kernaut explores unfamiliar spaces of kernels, much as an astronaut navigates unknown territory.
+<p align="center">
+  <img src="assets/kernaut-logo.svg" alt="Kernel Autoresearch (Kernaut)" width="720">
+</p>
+
+> The name also combines *kernel* and *astronaut*: Kernaut explores unfamiliar spaces of kernels, much as an astronaut navigates unknown territory.
 
 Kernaut applies to any method that needs a positive semidefinite kernel. Examples include Gaussian process surrogates for Bayesian optimization ([Wistuba and Grabocka, 2021](https://arxiv.org/abs/2101.07667)), scientific modeling in chemistry ([Griffiths et al., 2023](https://arxiv.org/abs/2212.04450)) and for differential equations ([Chen et al., 2021](https://arxiv.org/abs/2103.12959)), and kernel-based uncertainty estimates for language models ([Nikitin et al., 2024](https://arxiv.org/abs/2405.20003)).
 The supplied meta-evaluators use Gaussian processes. For another kernel method, write a meta-evaluator with its fitting and scoring rules.
@@ -16,6 +16,16 @@ The supplied meta-evaluators use Gaussian processes. For another kernel method, 
 - **Documentation**: <https://richardcsuwandi.github.io/kernaut/>
 - **Interactive archive demo**: <https://richardcsuwandi.github.io/kernaut/visualize/>
 - **GitHub repository**: <https://github.com/richardcsuwandi/kernaut>
+
+## How It Works
+
+Kernaut runs a propose, verify, and evaluate loop. Each part addresses one challenge of open-ended kernel discovery:
+
+- **Construction contracts.** Agents write kernel components under one of four contracts: feature maps, spectral representations, input transformations of a library kernel, and closures (sums, products, scalings, and pullbacks of library or accepted kernels). A trusted interpreter assembles each kernel with positive semidefinite (PSD) preserving rules. Validity then follows from the construction, under the stated assumptions of each contract.
+- **Verification tiers.** Tier 0 checks execution and output shape. Tier 1 adds numerical PSD tests on sampled inputs. Tier 2 adds contract assembly and consistency checks. Only Tier 2 programs enter the archive. Numerical tests alone are not enough: in our stress tests, 22 to 58% of unrestricted LLM-generated kernels that passed the initial screen failed broader tests.
+- **Quality-diversity archive.** A MAP-Elites archive keeps the best program in each cell. A cell combines the kernel's declared niche, its feature growth, and its novelty band. Archived kernels and structured feedback guide later proposals.
+- **Novelty screening.** Before an agent submits code, it registers the kernel's mathematical form, its PSD argument, and its closest known kernel. Kernaut then compares a behavioral fingerprint (the normalized Gram matrix on fixed probe points) with reference kernels. It penalizes near-duplicates of known kernels, unless they predict clearly better.
+- **Meta-evaluation.** Search and parameter tuning use meta-training tasks, and meta-validation tasks select one frozen program. Meta-test tasks use families, records, mechanisms, or patient groups that the search never saw. Because search never uses the validation tasks, selection is a finite model-selection problem. Its guarantee depends on the number of frozen candidates, not on the size of the program space.
 
 ## Quick Start
 

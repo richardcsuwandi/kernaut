@@ -2,18 +2,16 @@
 hide:
   - toc
 ---
-
-<img class="hero-logo" src="assets/kernaut-logo.svg" alt="Kernaut: Kernel Autoresearch">
-
-
 # Kernel Autoresearch for Open-Ended Model Discovery
 
 Kernels encode the inductive biases of a wide range of machine learning models, and the choice of kernel largely determines what a model can learn from limited data.
 **Kernel Autoresearch (Kernaut)** treats kernel design as open-ended program synthesis. Coding agents write kernels as programs, and construction contracts ensure that every accepted kernel is valid.
-Meta-evaluators measure how useful each kernel is, and an archive records every program with its parameters, verification evidence, and results.
+A quality-diversity archive keeps strong kernels with distinct behaviors, and meta-evaluators test whether the discoveries generalize to tasks that the search never saw.
 { .lead }
 
-The name combines *kernel* and *astronaut*: Kernaut explores unfamiliar spaces of kernels, much as an astronaut navigates unknown territory.
+<img class="hero-logo" src="assets/kernaut-logo.svg" alt="Kernel Autoresearch (Kernaut)">
+
+> The name combines *kernel* and *astronaut*: Kernaut explores unfamiliar spaces of kernels, much as an astronaut navigates unknown territory.
 
 [Installation and examples](getting-started.md){ .md-button .md-button--primary }
 [Meta-evaluation protocol](meta-evaluation.md){ .md-button }
@@ -26,6 +24,18 @@ These kernels apply to any method that needs one. Examples include Gaussian proc
 
 The supplied meta-evaluators use Gaussian processes. To use another kernel method, provide its fitting and scoring rules through a [meta-evaluator](extensions.md#add-a-task-and-its-context).
 The [meta-evaluation protocol](meta-evaluation.md) tests whether discovered inductive biases transfer to unseen tasks. It follows [DiscoGen](https://arxiv.org/abs/2603.17863) (Goldie et al., 2026).
+
+## How Kernaut works
+
+Kernaut runs a propose, verify, and evaluate loop. Each part addresses one challenge of open-ended kernel discovery:
+
+- **Construction contracts.** Agents write kernel components under one of four contracts: feature maps, spectral representations, input transformations of a library kernel, and closures (sums, products, scalings, and pullbacks of library or accepted kernels). A trusted interpreter assembles each kernel with positive semidefinite (PSD) preserving rules. Validity then follows from the construction, under the stated assumptions of each contract.
+- **Verification tiers.** Tier 0 checks execution and output shape. Tier 1 adds numerical PSD tests on sampled inputs. Tier 2 adds contract assembly and consistency checks. Only Tier 2 programs enter the archive. Numerical tests alone are not enough: in our stress tests, 22 to 58% of unrestricted LLM-generated kernels that passed the initial screen failed broader tests.
+- **Quality-diversity archive.** A MAP-Elites archive keeps the best program in each cell. A cell combines the kernel's declared niche, its feature growth, and its novelty band. Archived kernels and structured feedback guide later proposals.
+- **Novelty screening.** Before an agent submits code, it registers the kernel's mathematical form, its PSD argument, and its closest known kernel. Kernaut then compares a behavioral fingerprint (the normalized Gram matrix on fixed probe points) with reference kernels. It penalizes near-duplicates of known kernels, unless they predict clearly better.
+- **Meta-evaluation.** Search and parameter tuning use meta-training tasks, and meta-validation tasks select one frozen program. Meta-test tasks use families, records, mechanisms, or patient groups that the search never saw. Because search never uses the validation tasks, selection is a finite model-selection problem. Its guarantee depends on the number of frozen candidates, not on the size of the program space.
+
+Read the [verification guide](verification.md) for the evidence tiers and the [meta-evaluation protocol](meta-evaluation.md) for the splits.
 
 ## Benchmarks and tasks
 
