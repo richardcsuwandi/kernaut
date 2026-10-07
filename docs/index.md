@@ -56,7 +56,7 @@ The [contribution guide](contributing.md) specifies the requirements for new tas
 
 ## Research publication
 
-**Kernel Autoresearch for Open-Ended Model Discovery**  
+**[Kernel Autoresearch for Open-Ended Model Discovery](https://www.alphaxiv.org/abs/2610.kernel-autoresearch)**  
 Richard Cornelius Suwandi, Feng Yin, and Kevin Murphy.
 
 Read the [paper](https://www.alphaxiv.org/abs/2610.kernel-autoresearch), see the [project citation](https://github.com/richardcsuwandi/kernaut#citation),
