@@ -1,12 +1,15 @@
 These files contain evaluation data for the greenhouse-gas forecasting benchmark.
 
-Monthly global mean mole fractions of four greenhouse gases, produced by the
-NOAA Global Monitoring Laboratory (GML) cooperative air sampling network:
+Monthly global mean mole fractions of six gases, produced by the
+NOAA Global Monitoring Laboratory (GML) cooperative air sampling network and the
+NOAA GML Halocarbons and other Atmospheric Trace Species (HATS) program:
 
 - `co2.csv`: carbon dioxide in parts per million (ppm), 1979-2026.
 - `ch4.csv`: methane in parts per billion (ppb), 1983-2026.
 - `n2o.csv`: nitrous oxide in parts per billion (ppb), 2001-2026.
 - `sf6.csv`: sulfur hexafluoride in parts per trillion (ppt), 1997-2026.
+- `cfc12.csv`: CFC-12 in parts per trillion (ppt), from 1977 (HATS combined global monthly means).
+- `cfc11.csv`: CFC-11 in parts per trillion (ppt), from 1977 (HATS combined global monthly means).
 
 Each file stores `decimal_year,monthly_mean` pairs with missing months removed.
 The original records state: "These data are made freely available to the

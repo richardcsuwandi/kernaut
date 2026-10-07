@@ -1,6 +1,6 @@
 """Evaluate greenhouse-gas forecasts using bundled NOAA GML monthly means.
 
-Each task family uses one gas record: global monthly mean CO2, CH4, N2O, or SF6.
+Each task family uses one gas record: global monthly mean CO2, CH4, N2O, SF6, CFC-12, or CFC-11.
 An episode standardizes a training window and forecasts a fixed number of held-out
 months. The record's time span is normalized, so all inputs lie in [0, 1].
 The score is negative mean held-out continuous ranked probability score (CRPS).
@@ -35,9 +35,16 @@ from kernaut.models import (
 )
 
 GAS_DATA_DIR = "data/greenhouse"
-SERIES_FILES = {"co2": "co2.csv", "ch4": "ch4.csv", "n2o": "n2o.csv", "sf6": "sf6.csv"}
+SERIES_FILES = {
+    "co2": "co2.csv",
+    "ch4": "ch4.csv",
+    "n2o": "n2o.csv",
+    "sf6": "sf6.csv",
+    "cfc12": "cfc12.csv",
+    "cfc11": "cfc11.csv",
+}
 TRAIN_GASES: tuple[str, ...] = ("co2", "ch4", "n2o")
-TEST_GASES: tuple[str, ...] = ("sf6",)
+TEST_GASES: tuple[str, ...] = ("sf6", "cfc12", "cfc11")
 _SEED_OFFSETS = {"train": 0, "validation": 10_000, "test": 20_000}
 _NOAA_ATTRIBUTION = (
     "Monthly global means from NOAA Global Monitoring Laboratory trends data "

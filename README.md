@@ -1,6 +1,7 @@
 # Kernel Autoresearch for Open-Ended Model Discovery
 
 Kernels encode the inductive biases of a wide range of machine learning models, and the choice of kernel largely determines what a model can learn from limited data.
+
 **Kernel Autoresearch (Kernaut)** treats kernel design as open-ended program synthesis. Coding agents write kernels as programs, and construction contracts ensure that every accepted kernel is valid.
 A quality-diversity archive keeps strong kernels with distinct behaviors, and meta-evaluators test whether the discoveries generalize to tasks that the search never saw.
 
@@ -102,7 +103,7 @@ Try the [black-box optimization benchmark](docs/tasks.md#black-box-optimization)
 | Benchmark or task | Evaluation scope | Interface |
 | --- | --- | --- |
 | Black-box optimization | Predictive accuracy and Bayesian optimization on transformed analytic functions, with six held-out function families | [`meta-run`, `meta-benchmark`](docs/tasks.md#black-box-optimization) |
-| Greenhouse-gas forecasting | Transfer from CO2, CH4, and N2O to held-out records. The paper tests SF6, CFC-12, and CFC-11. The package includes SF6 testing | [`ts-run`, `ts-benchmark`](docs/tasks.md#greenhouse-gas-forecasting) |
+| Greenhouse-gas forecasting | Transfer from CO2, CH4, and N2O to the held-out records SF6, CFC-12, and CFC-11 | [`ts-run`, `ts-benchmark`](docs/tasks.md#greenhouse-gas-forecasting) |
 | ChemBench enzyme kinetics | Reaction-rate prediction across ten training mechanism domains and five held-out domains | [`chem-run`, `chem-benchmark`](docs/tasks.md#chembench-enzyme-kinetics) |
 | GlucoseBench forecasting | Transfer across simulated patient groups. Local search uses children and validation uses adolescents. Hidden adult testing requires the external evaluator | [`glucose-run`, `glucose-benchmark`](docs/tasks.md#glucosebench-forecasting) |
 | User-supplied regression | Gaussian process marginal likelihood on a JSON dataset. Users define separate validation and test evaluations | [`run`](docs/your-problem.md) |

@@ -41,9 +41,8 @@ See [Goldie et al. (2026)](references.md#discogen-and-meta-evaluation) for the r
 
 This benchmark uses bundled monthly global mean records from the NOAA Global Monitoring Laboratory.
 Meta-training and meta-validation use CO2, CH4, and N2O.
-The paper tests SF6, CFC-12, and CFC-11. The CFC records come from NOAA HATS and test transfer to records that rise and then decline.
-The package bundles CO2, CH4, N2O, and SF6. Its test command currently evaluates SF6 only.
-CFC-12 and CFC-11 require additional records and an extended evaluator.
+Meta-test uses SF6, CFC-12, and CFC-11. The CFC records come from NOAA HATS and test transfer to records that rise and then decline.
+The package bundles all six records, and the test command evaluates the three held-out gases.
 Each episode fits a prefix and predicts a subsequent window in the episode's sequence.
 The default forecast horizon is 48 months, with at least 216 training months.
 
@@ -59,7 +58,7 @@ kernaut ts-benchmark --archive runs/forecast/archive.sqlite \
 ```
 
 Reports include CRPS, NLPD, and RMSE. The search score is negative mean CRPS, with an optional novelty penalty.
-The paper evaluates 30 windows per held-out record. The command default is one episode per family.
+The paper evaluates 30 windows per held-out record, for 90 windows in total. Set `--episodes-per-family 30` for those counts. The command default is one episode per family.
 See the [NOAA source and data attribution](references.md#noaa-greenhouse-gas-records).
 
 ## ChemBench enzyme kinetics

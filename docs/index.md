@@ -5,6 +5,7 @@ hide:
 # Kernel Autoresearch for Open-Ended Model Discovery
 
 Kernels encode the inductive biases of a wide range of machine learning models, and the choice of kernel largely determines what a model can learn from limited data.
+
 **Kernel Autoresearch (Kernaut)** treats kernel design as open-ended program synthesis. Coding agents write kernels as programs, and construction contracts ensure that every accepted kernel is valid.
 A quality-diversity archive keeps strong kernels with distinct behaviors, and meta-evaluators test whether the discoveries generalize to tasks that the search never saw.
 { .lead }
@@ -35,7 +36,7 @@ Read [how Kernaut works](how-it-works.md) for the framework overview, or follow 
 | Benchmark or task | Purpose |
 | --- | --- |
 | [Black-box optimization](tasks.md#black-box-optimization) | Evaluate prediction and optimization on transformed analytic functions |
-| [Greenhouse-gas forecasting](tasks.md#greenhouse-gas-forecasting) | Evaluate transfer across NOAA gas records. The paper tests SF6, CFC-12, and CFC-11. The package includes SF6 testing |
+| [Greenhouse-gas forecasting](tasks.md#greenhouse-gas-forecasting) | Evaluate transfer from CO2, CH4, and N2O to the held-out records SF6, CFC-12, and CFC-11 |
 | [ChemBench enzyme kinetics](tasks.md#chembench-enzyme-kinetics) | Evaluate transfer from canonical rate-law mechanisms to distinct held-out mechanisms |
 | [GlucoseBench forecasting](tasks.md#glucosebench-forecasting) | Evaluate kernel transfer across simulated patient groups |
 | [User-supplied regression](your-problem.md) | Search on observations supplied as an input matrix and target vector |

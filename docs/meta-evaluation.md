@@ -33,12 +33,12 @@ For GlucoseBench, parameter fitting uses the other complete training episodes, a
 | Benchmark | Meta-training | Meta-validation | Meta-test |
 | --- | --- | --- | --- |
 | Black-box optimization | Five function families | New seeded transformations of the same five families | Six different function families |
-| Greenhouse gases | CO2, CH4, N2O | New seeded episodes from those records | SF6, CFC-12, CFC-11 in the paper |
+| Greenhouse gases | CO2, CH4, N2O | New seeded episodes from those records | SF6, CFC-12, CFC-11 |
 | ChemBench | Ten canonical mechanism domains | New input samples in those domains | Five structurally distinct domains |
 | GlucoseBench | Ten child profiles | Ten adolescent profiles | Ten adult profiles through the external hidden-test evaluator |
 
 The [benchmark catalogue](tasks.md) lists the families and available package interfaces.
-The paper tests three held-out gases. The bundled `ts-benchmark --split test` currently evaluates SF6 only. CFC-12 and CFC-11 require the additional NOAA HATS records and an extended evaluator.
+`ts-benchmark --split test` evaluates the three held-out gases, SF6, CFC-12, and CFC-11.
 The greenhouse split separates generated episodes and held-out gas records. It does not make training and validation calendar months disjoint.
 For custom temporal benchmarks, define disjoint time intervals if that is the intended generalization test.
 
