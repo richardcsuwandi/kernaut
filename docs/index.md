@@ -27,15 +27,8 @@ The [meta-evaluation protocol](meta-evaluation.md) tests whether discovered indu
 
 ## How Kernaut works
 
-Kernaut runs a propose, verify, and evaluate loop. Each part addresses one challenge of open-ended kernel discovery:
-
-- **Construction contracts.** Agents write kernel components under one of four contracts: feature maps, spectral representations, input transformations of a library kernel, and closures (sums, products, scalings, and pullbacks of library or accepted kernels). A trusted interpreter assembles each kernel with positive semidefinite (PSD) preserving rules. Validity then follows from the construction, under the stated assumptions of each contract.
-- **Verification tiers.** Tier 0 checks execution and output shape. Tier 1 adds numerical PSD tests on sampled inputs. Tier 2 adds contract assembly and consistency checks. Only Tier 2 programs enter the archive. Numerical tests alone are not enough: in our stress tests, 22 to 58% of unrestricted LLM-generated kernels that passed the initial screen failed broader tests.
-- **Quality-diversity archive.** A MAP-Elites archive keeps the best program in each cell. A cell combines the kernel's declared niche, its feature growth, and its novelty band. Archived kernels and structured feedback guide later proposals.
-- **Novelty screening.** Before an agent submits code, it registers the kernel's mathematical form, its PSD argument, and its closest known kernel. Kernaut then compares a behavioral fingerprint (the normalized Gram matrix on fixed probe points) with reference kernels. It penalizes near-duplicates of known kernels, unless they predict clearly better.
-- **Meta-evaluation.** Search and parameter tuning use meta-training tasks, and meta-validation tasks select one frozen program. Meta-test tasks use families, records, mechanisms, or patient groups that the search never saw. Because search never uses the validation tasks, selection is a finite model-selection problem. Its guarantee depends on the number of frozen candidates, not on the size of the program space.
-
-Read the [verification guide](verification.md) for the evidence tiers and the [meta-evaluation protocol](meta-evaluation.md) for the splits.
+Agents propose kernel components, a trusted backend verifies their construction, and evaluation guides further proposals. A frozen kernel is then tested on tasks the search never saw.
+Read [how Kernaut works](how-it-works.md) for the framework overview, or follow the [DWF example](how-it-works.md#example-discovery-the-dwf-kernel) to see a discovered kernel.
 
 ## Benchmarks and tasks
 
@@ -65,5 +58,5 @@ The [contribution guide](contributing.md) specifies the requirements for new tas
 **Kernel Autoresearch for Open-Ended Model Discovery**  
 Richard Cornelius Suwandi, Feng Yin, and Kevin Murphy.
 
-See the [project citation](https://github.com/richardcsuwandi/kernaut#paper-and-citation),
+See the [project citation](https://github.com/richardcsuwandi/kernaut#citation),
 [related references](references.md), and [verification guarantees](verification.md).

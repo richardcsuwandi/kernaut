@@ -19,13 +19,18 @@ The supplied meta-evaluators use Gaussian processes. For another kernel method, 
 
 ## How It Works
 
-Kernaut runs a propose, verify, and evaluate loop. Each part addresses one challenge of open-ended kernel discovery:
+<p align="center">
+  <img src="assets/method-overview.png" alt="Kernaut framework overview" width="100%">
+</p>
 
-- **Construction contracts.** Agents write kernel components under one of four contracts: feature maps, spectral representations, input transformations of a library kernel, and closures (sums, products, scalings, and pullbacks of library or accepted kernels). A trusted interpreter assembles each kernel with positive semidefinite (PSD) preserving rules. Validity then follows from the construction, under the stated assumptions of each contract.
-- **Verification tiers.** Tier 0 checks execution and output shape. Tier 1 adds numerical PSD tests on sampled inputs. Tier 2 adds contract assembly and consistency checks. Only Tier 2 programs enter the archive. Numerical tests alone are not enough: in our stress tests, 22 to 58% of unrestricted LLM-generated kernels that passed the initial screen failed broader tests.
-- **Quality-diversity archive.** A MAP-Elites archive keeps the best program in each cell. A cell combines the kernel's declared niche, its feature growth, and its novelty band. Archived kernels and structured feedback guide later proposals.
-- **Novelty screening.** Before an agent submits code, it registers the kernel's mathematical form, its PSD argument, and its closest known kernel. Kernaut then compares a behavioral fingerprint (the normalized Gram matrix on fixed probe points) with reference kernels. It penalizes near-duplicates of known kernels, unless they predict clearly better.
-- **Meta-evaluation.** Search and parameter tuning use meta-training tasks, and meta-validation tasks select one frozen program. Meta-test tasks use families, records, mechanisms, or patient groups that the search never saw. Because search never uses the validation tasks, selection is a finite model-selection problem. Its guarantee depends on the number of frozen candidates, not on the size of the program space.
+Kernaut searches for reusable kernels through four steps:
+
+1. **Propose.** A coding agent writes kernel components, such as feature maps or input transforms.
+2. **Verify.** A trusted backend assembles the components using construction rules that preserve kernel validity under stated assumptions.
+3. **Evaluate and refine.** The system scores candidates and keeps strong kernels with distinct behaviors in an archive. Agents use these results to guide further proposals.
+4. **Test transfer.** Validation selects a frozen kernel, which is then evaluated on tasks the search never saw.
+
+See [how Kernaut works](docs/how-it-works.md) for the example and links to the verification and evaluation guides.
 
 ## Quick Start
 
@@ -59,11 +64,38 @@ See the [full documentation](https://richardcsuwandi.github.io/kernaut/) for det
 
 ## Interactive Archive Demo
 
+<p align="center">
+  <a href="https://richardcsuwandi.github.io/kernaut/visualize/"><img src="assets/archive-visualizer.png" alt="Kernaut archive visualizer" width="100%"></a>
+</p>
+
 The documentation includes a [guided archive viewer](https://richardcsuwandi.github.io/kernaut/visualize/).
 Select candidates, inspect their verification evidence, and follow the recorded discovery history.
 The demo shows 19 evaluated candidates from a historical meta-training run, including the dual warp-fold (DWF) kernel.
 It displays fixed results, so it never runs candidate code or calls a model provider.
 The [visualization guide](docs/visualize.md) explains how to preview your own archives.
+
+## Example Discovery: Dual Warp-Fold (DWF) Kernel
+
+An agent discovered the **dual warp-fold (DWF)** kernel on the black-box optimization benchmark.
+DWF combines a gentle warp with a triangular fold of each input coordinate. The fold maps mirrored inputs to the same feature value, while the warp keeps them distinguishable.
+
+<p align="center">
+  <img src="assets/dwf-geometry.png" alt="The warp and fold of the discovered DWF kernel" width="100%">
+</p>
+
+*The gentle warp and triangular fold used by DWF.*
+
+DWF applies a Matérn-5/2 kernel to this discovered representation, so similarity depends on input location as well as distance. This makes it nonstationary, unlike a standard Matérn kernel. Sums and products of standard stationary kernels cannot recover this structure.
+
+Because the discovered kernel programs are short and interpretable, they invite human–AI collaboration: researchers can understand the agent's proposal and refine its assumptions. For DWF, we separated the warp and fold into additive kernel components, strengthening the connection between mirrored inputs. This human-refined version reduced held-out predictive error by a further 5.7%, showing how an agent's discovery can become a starting point for further model design.
+
+<p align="center">
+  <img src="assets/dwf-prior-samples.png" alt="Prior samples from Matérn-5/2, DWF, and the additive refinement" width="100%">
+</p>
+
+*Functions sampled before fitting data: (a) Matérn-5/2, (b) DWF, and (c) the human refinement. DWF samples have visible corners at the fold.*
+
+Try the [black-box optimization benchmark](docs/tasks.md#black-box-optimization), or see the [paper](#citation) for the full analysis.
 
 ## Benchmarks
 

@@ -71,6 +71,7 @@ validation:
 
 nav:
   - Overview: index.md
+  - How it works: how-it-works.md
   - Installation: getting-started.md
   - Benchmarks:
       - Built-in benchmarks: tasks.md
