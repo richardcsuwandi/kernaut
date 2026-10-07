@@ -59,5 +59,5 @@ The [contribution guide](contributing.md) specifies the requirements for new tas
 **Kernel Autoresearch for Open-Ended Model Discovery**  
 Richard Cornelius Suwandi, Feng Yin, and Kevin Murphy.
 
-See the [project citation](https://github.com/richardcsuwandi/kernaut#citation),
+Read the [paper](https://www.alphaxiv.org/abs/2610.kernel-autoresearch), see the [project citation](https://github.com/richardcsuwandi/kernaut#citation),
 [related references](references.md), and [verification guarantees](verification.md).

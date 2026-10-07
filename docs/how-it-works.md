@@ -28,4 +28,4 @@ Because the discovered kernel programs are short and interpretable, they invite 
 
 *Functions sampled before fitting data: (a) Matérn-5/2 and (b) DWF. DWF samples have visible corners at the fold.*
 
-Try the [black-box optimization benchmark](tasks.md#black-box-optimization), or see the [paper](https://github.com/richardcsuwandi/kernaut#citation) for the full analysis.
+Try the [black-box optimization benchmark](tasks.md#black-box-optimization), or read the [paper](https://www.alphaxiv.org/abs/2610.kernel-autoresearch) for the full analysis.

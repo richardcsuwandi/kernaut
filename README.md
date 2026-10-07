@@ -14,6 +14,7 @@ A quality-diversity archive keeps strong kernels with distinct behaviors, and me
 Kernaut applies to any method that needs a positive semidefinite kernel. Examples include Gaussian process surrogates for Bayesian optimization ([Wistuba and Grabocka, 2021](https://arxiv.org/abs/2101.07667)), scientific modeling in chemistry ([Griffiths et al., 2023](https://arxiv.org/abs/2212.04450)) and for differential equations ([Chen et al., 2021](https://arxiv.org/abs/2103.12959)), and kernel-based uncertainty estimates for language models ([Nikitin et al., 2024](https://arxiv.org/abs/2405.20003)).
 The supplied meta-evaluators use Gaussian processes. For another kernel method, write a meta-evaluator with its fitting and scoring rules.
 
+- **Paper**: <https://www.alphaxiv.org/abs/2610.kernel-autoresearch>
 - **Documentation**: <https://richardcsuwandi.github.io/kernaut/>
 - **Interactive archive demo**: <https://richardcsuwandi.github.io/kernaut/visualize/>
 - **GitHub repository**: <https://github.com/richardcsuwandi/kernaut>
@@ -96,7 +97,7 @@ Because the discovered kernel programs are short and interpretable, they invite 
 
 *Functions sampled before fitting data: (a) Matérn-5/2 and (b) DWF. DWF samples have visible corners at the fold.*
 
-Try the [black-box optimization benchmark](docs/tasks.md#black-box-optimization), or see the [paper](#citation) for the full analysis.
+Try the [black-box optimization benchmark](docs/tasks.md#black-box-optimization), or read the [paper](https://www.alphaxiv.org/abs/2610.kernel-autoresearch) for the full analysis.
 
 ## Benchmarks
 
@@ -159,6 +160,7 @@ If you use Kernaut in your research, please cite our paper **Kernel Autoresearch
   title = {Kernel Autoresearch for Open-Ended Model Discovery},
   author = {Suwandi, Richard Cornelius and Yin, Feng and Murphy, Kevin},
   year = {2026},
+  url = {https://www.alphaxiv.org/abs/2610.kernel-autoresearch},
   note = {Preprint}
 }
 ```

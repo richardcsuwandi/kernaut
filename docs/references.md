@@ -1,7 +1,7 @@
 # References and attribution
 
 These references describe the evaluation framework, statistical methods, and external data used by Kernaut.
-Cite the relevant benchmark sources alongside the Kernaut preprint when reporting results.
+Cite the relevant benchmark sources alongside the [Kernaut preprint](https://www.alphaxiv.org/abs/2610.kernel-autoresearch) when reporting results.
 The package adapts these tasks to kernel evaluation. Its metrics and protocols can differ from those of the original projects.
 
 ## DiscoGen and meta-evaluation
