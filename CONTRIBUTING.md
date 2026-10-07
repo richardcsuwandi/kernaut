@@ -51,15 +51,17 @@ A new learned baseline needs an explicit training and tuning protocol.
 Model adapters must preserve tool call identifiers, return structured tool requests, and keep
 credentials in environment variables. Document required dependencies and timeout behavior.
 
-## Protect the construction contracts
+## Add a construction contract
 
-A new construction contract requires:
+New construction contracts are welcome. Each one widens the kernels that agents can write.
+A new contract requires:
 
 - An implementation in the trusted interpreter.
 - An explicit mathematical argument for kernel validity.
 - A registration entry that describes the contract.
 - Tests for valid and invalid candidates.
 
+The validity argument is what keeps every accepted kernel valid, so review focuses on it.
 Never repair or reinterpret a failed candidate to make it pass. Numerical PSD checks are diagnostic evidence,
 not a proof for arbitrary inputs.
 

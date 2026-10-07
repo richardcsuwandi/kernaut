@@ -2,33 +2,24 @@
   <img src="assets/kernaut-logo.svg" alt="Kernaut: Kernel Autoresearch" width="720">
 </p>
 
-# Kernaut: Kernel Autoresearch
+# Kernel Autoresearch for Open-Ended Model Discovery
 
-Kernels encode inductive biases: they determine which inputs a model treats as similar and which patterns it can learn.
-Kernaut treats kernel design as open-ended model discovery.
-Language models propose kernel programs, construction contracts govern their validity, and task evaluators measure their usefulness.
-An archive records each program, its parameters, verification evidence, and results.
+Kernels encode the inductive biases of a wide range of machine learning models, and the choice of kernel largely determines what a model can learn from limited data.
+**Kernel Autoresearch (Kernaut)** treats kernel design as open-ended program synthesis. Coding agents write kernels as programs, and construction contracts ensure that every accepted kernel is valid.
+Meta-evaluators measure how useful each kernel is, and an archive records every program with its parameters, verification evidence, and results.
 
-The framework targets methods that use positive semidefinite kernels, including kernel ridge regression, support vector machines, and Gaussian processes.
-The supplied evaluators use Gaussian processes. Other kernel methods require a task evaluator for their fitting and scoring rules.
-Meta-training, meta-validation, and meta-test splits assess whether discovered inductive biases transfer to unseen tasks.
+The name combines *kernel* and *astronaut*: Kernaut explores unfamiliar spaces of kernels, much as an astronaut navigates unknown territory.
 
-[Installation](docs/getting-started.md) | [Benchmarks](docs/tasks.md) |
-[Meta-evaluation protocol](docs/meta-evaluation.md) | [Custom benchmarks](docs/custom-benchmarks.md) |
-[Archive visualization](docs/visualize.md)
+Kernaut applies to any method that needs a positive semidefinite kernel. Examples include Gaussian process surrogates for Bayesian optimization ([Wistuba and Grabocka, 2021](https://arxiv.org/abs/2101.07667)), scientific modeling in chemistry ([Griffiths et al., 2023](https://arxiv.org/abs/2212.04450)) and for differential equations ([Chen et al., 2021](https://arxiv.org/abs/2103.12959)), and kernel-based uncertainty estimates for language models ([Nikitin et al., 2024](https://arxiv.org/abs/2405.20003)).
+The supplied meta-evaluators use Gaussian processes. For another kernel method, write a meta-evaluator with its fitting and scoring rules.
 
-## Interactive archive example
+- **Documentation**: <https://richardcsuwandi.github.io/kernaut/>
+- **Interactive archive demo**: <https://richardcsuwandi.github.io/kernaut/visualize/>
+- **GitHub repository**: <https://github.com/richardcsuwandi/kernaut>
 
-The documentation includes a [guided archive viewer](https://richardcsuwandi.github.io/kernaut/visualize/).
-Select candidates and chart markers, inspect verification evidence, and follow the recorded discovery history.
-The example contains 19 evaluated candidates from a historical meta-training run, including the dual warp–fold (DWF) kernel.
-It displays fixed results without running candidate code or calling a model provider.
+## Quick Start
 
-See the [visualization guide](docs/visualize.md) for local preview instructions and interpretation.
-
-## Installation and offline example
-
-Use Python 3.11 or later on macOS or Linux:
+Use Python 3.11 or later on macOS or Linux. Install Kernaut:
 
 ```bash
 git clone https://github.com/richardcsuwandi/kernaut.git
@@ -39,18 +30,32 @@ pip install -e .
 pip install -e examples/extension
 ```
 
-Run the example and inspect its archive:
+Run the offline example, which needs no API key:
 
 ```bash
 kernaut task-run --task sine --config examples/extension/offline.toml \
   --baseline linear-demo --archive runs/demo/archive.sqlite
+```
+
+Inspect the archive in the visualizer:
+
+```bash
 kernaut viz --archive runs/demo/archive.sqlite --open
 ```
 
-The example uses predefined model replies to verify and evaluate one candidate without an API key.
-For model-generated proposals, [configure a model provider](docs/getting-started.md#choose-a-model).
+The example replays predefined model replies to verify and evaluate one candidate.
+To generate proposals with a language model, [configure a model provider](docs/getting-started.md#choose-a-model).
+See the [full documentation](https://richardcsuwandi.github.io/kernaut/) for detailed usage.
 
-## Benchmarks and evaluation tasks
+## Interactive Archive Demo
+
+The documentation includes a [guided archive viewer](https://richardcsuwandi.github.io/kernaut/visualize/).
+Select candidates, inspect their verification evidence, and follow the recorded discovery history.
+The demo shows 19 evaluated candidates from a historical meta-training run, including the dual warp-fold (DWF) kernel.
+It displays fixed results, so it never runs candidate code or calls a model provider.
+The [visualization guide](docs/visualize.md) explains how to preview your own archives.
+
+## Benchmarks
 
 | Benchmark or task | Evaluation scope | Interface |
 | --- | --- | --- |
@@ -62,44 +67,49 @@ For model-generated proposals, [configure a model provider](docs/getting-started
 | Offline sine-wave example | A small integration example for tasks, model adapters, baselines, and verification | [`task-run`](docs/getting-started.md#run-without-an-api-key) |
 
 The [benchmark guide](docs/tasks.md) lists data requirements, metrics, task families, and commands.
-The [meta-evaluation guide](docs/meta-evaluation.md) explains split membership, episode generation, configuration, and candidate selection.
-This separation follows the evaluation framework discussed by [Goldie et al. (2026)](https://arxiv.org/abs/2603.17863).
+Each benchmark splits tasks into meta-training, meta-validation, and meta-test sets, so you can check whether discovered inductive biases transfer to unseen tasks.
+The [meta-evaluation guide](docs/meta-evaluation.md) explains the splits, episode generation, and candidate selection. We follow the evaluation framework of [DiscoGen](https://arxiv.org/abs/2603.17863) (Goldie et al., 2026).
 
-## Custom tasks and reference methods
+## Your Own Problem
 
-Provide training data as JSON and a task description in Markdown.
-After configuring a model provider, run:
+Provide your training data as JSON and a task description in Markdown.
+Then configure a model provider and run:
 
 ```bash
 kernaut run --config configs/openai.toml --context my-task.md \
   --data my-data.json --archive runs/my-task/archive.sqlite
 ```
 
-The default regression workflow tunes eight reference kernels before searching for new programs.
-Use a [task extension](docs/extensions.md#add-a-task-and-its-context) for another data loader or scoring rule.
-For evaluation across episodes, follow the [custom benchmark protocol](docs/custom-benchmarks.md).
-The [baseline guide](docs/baselines.md) explains how to add reference kernels and report comparable evaluation budgets.
+The default regression workflow tunes eight reference kernels before it searches for new programs.
+To use another data loader or scoring rule, write a [task extension](docs/extensions.md#add-a-task-and-its-context).
+To evaluate across episodes, follow the [custom benchmark protocol](docs/custom-benchmarks.md).
+To add reference kernels and report comparable evaluation budgets, see the [baseline guide](docs/baselines.md).
 
-## Verification and inspection
+## Verification
 
-Kernaut accepts candidates that pass its Tier 2 construction-contract checks.
-The construction rules preserve positive semidefiniteness, the property required of a valid kernel.
-This guarantee depends on the trusted interpreter being correct. Numerical checks alone are not a proof for all inputs.
+Kernaut accepts only candidates that pass its Tier 2 construction-contract checks.
+The construction rules preserve positive semidefiniteness, the property that makes a kernel valid.
+This guarantee assumes that the trusted interpreter is correct. Numerical checks alone do not prove validity for all inputs.
 
-The [visualizer](docs/visualize.md) connects candidate code to scores, verification evidence, and recorded agent conversations.
-Candidate processes limit execution failures but do not securely isolate hostile code.
-See the [verification guide](docs/verification.md) and [security policy](SECURITY.md).
+The [visualizer](docs/visualize.md) links candidate code to scores, verification evidence, and recorded agent conversations.
+Candidate processes limit execution failures, but they do not securely isolate hostile code.
+See the [verification guide](docs/verification.md) and the [security policy](SECURITY.md).
 
-## Contributions
+## Contributing
 
-Contributions can add benchmark tasks, reference kernels, model adapters, documentation, or corrections.
-Include a reproducible example, an explicit evaluation protocol, and tests that do not require provider credentials.
-See the [contribution guide](CONTRIBUTING.md).
+We welcome contributions that help Kernaut apply to more tasks and domains.
 
-## Paper and citation
+- **Found a bug?** [Open an issue](https://github.com/richardcsuwandi/kernaut/issues).
+- **Want to add a task or domain?** Follow the [custom benchmark protocol](docs/custom-benchmarks.md).
+- **Want to add a reference kernel or model adapter?** See the [baseline guide](docs/baselines.md) and the [extension guide](docs/extensions.md).
+- **Want to add a construction contract?** A new contract widens the kernels that agents can write, for example state-space kernels from linear ODEs or kernels for structured inputs. It needs an implementation in the trusted interpreter, a proof of kernel validity, and tests for valid and invalid candidates. See [Add a construction contract](CONTRIBUTING.md#add-a-construction-contract).
 
-Accompanies **Kernel Autoresearch for Open-Ended Model Discovery**, by
-**Richard Cornelius Suwandi, Feng Yin, and Kevin Murphy**.
+Include a reproducible example, an explicit evaluation protocol, and tests that need no provider credentials.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## Citation
+
+If you use Kernaut in your research, please cite our paper **Kernel Autoresearch for Open-Ended Model Discovery** by Richard Cornelius Suwandi, Feng Yin, and Kevin Murphy:
 
 ```bibtex
 @misc{suwandi2026kernaut,
@@ -111,6 +121,8 @@ Accompanies **Kernel Autoresearch for Open-Ended Model Discovery**, by
 ```
 
 See [references and benchmark attribution](docs/references.md) for DiscoGen, CRPS, and the benchmark sources.
+See also the [citation metadata](CITATION.cff) and the [greenhouse data attribution](src/kernaut/data/greenhouse/SOURCE.md).
 
-[Citation metadata](CITATION.cff) | [MIT license](LICENSE) |
-[Greenhouse data attribution](src/kernaut/data/greenhouse/SOURCE.md)
+## License
+
+Kernaut is released under the [MIT License](LICENSE).

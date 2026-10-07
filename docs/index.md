@@ -5,13 +5,15 @@ hide:
 
 <img class="hero-logo" src="assets/kernaut-logo.svg" alt="Kernaut: Kernel Autoresearch">
 
-# Kernaut: Kernel Autoresearch
 
-Kernels encode inductive biases by defining which inputs a model treats as similar.
-Kernaut discovers these biases as executable kernel programs.
-Language models propose candidates, construction contracts govern their validity, and task evaluators measure their usefulness.
-The archive links each program to its parameters, verification evidence, and scores.
+# Kernel Autoresearch for Open-Ended Model Discovery
+
+Kernels encode the inductive biases of a wide range of machine learning models, and the choice of kernel largely determines what a model can learn from limited data.
+**Kernel Autoresearch (Kernaut)** treats kernel design as open-ended program synthesis. Coding agents write kernels as programs, and construction contracts ensure that every accepted kernel is valid.
+Meta-evaluators measure how useful each kernel is, and an archive records every program with its parameters, verification evidence, and results.
 { .lead }
+
+The name combines *kernel* and *astronaut*: Kernaut explores unfamiliar spaces of kernels, much as an astronaut navigates unknown territory.
 
 [Installation and examples](getting-started.md){ .md-button .md-button--primary }
 [Meta-evaluation protocol](meta-evaluation.md){ .md-button }
@@ -19,11 +21,11 @@ The archive links each program to its parameters, verification evidence, and sco
 ## Kernel design as model discovery
 
 A fixed library of kernels limits which structures automated search can express.
-Kernaut searches over programs while retaining explicit rules for constructing positive semidefinite kernels.
-These kernels can be used in kernel ridge regression, support vector machines, Gaussian processes, and other methods that accept such kernels.
+Kernaut searches over programs instead, and it keeps explicit rules for constructing positive semidefinite kernels.
+These kernels apply to any method that needs one. Examples include Gaussian process surrogates for Bayesian optimization ([Wistuba and Grabocka, 2021](https://arxiv.org/abs/2101.07667)), scientific modeling in chemistry ([Griffiths et al., 2023](https://arxiv.org/abs/2212.04450)) and for differential equations ([Chen et al., 2021](https://arxiv.org/abs/2103.12959)), and kernel-based uncertainty estimates for language models ([Nikitin et al., 2024](https://arxiv.org/abs/2405.20003)).
 
-The supplied evaluators use Gaussian processes. To use another kernel method, provide its fitting and scoring rules through a [task evaluator](extensions.md#add-a-task-and-its-context).
-The [meta-evaluation protocol](meta-evaluation.md) tests whether discovered inductive biases transfer to unseen tasks, following [Goldie et al. (2026)](https://arxiv.org/abs/2603.17863).
+The supplied meta-evaluators use Gaussian processes. To use another kernel method, provide its fitting and scoring rules through a [meta-evaluator](extensions.md#add-a-task-and-its-context).
+The [meta-evaluation protocol](meta-evaluation.md) tests whether discovered inductive biases transfer to unseen tasks. It follows [DiscoGen](https://arxiv.org/abs/2603.17863) (Goldie et al., 2026).
 
 ## Benchmarks and tasks
 
