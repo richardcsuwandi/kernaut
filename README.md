@@ -17,7 +17,6 @@ The supplied meta-evaluators use Gaussian processes. For another kernel method, 
 - **Paper**: <https://www.alphaxiv.org/abs/2610.kernel-autoresearch>
 - **Documentation**: <https://richardcsuwandi.github.io/kernaut/>
 - **Interactive archive demo**: <https://richardcsuwandi.github.io/kernaut/visualize/>
-- **GitHub repository**: <https://github.com/richardcsuwandi/kernaut>
 
 ## How It Works
 
