@@ -26,6 +26,16 @@ commits. Tests must run without API keys or paid model calls. Add focused behavi
 new extension interfaces or fixes. Include the exact command and observed result in your pull
 request.
 
+## Documentation
+
+Edit documentation in `docs/` and navigation in `mkdocs.yml` in this repository.
+Install `requirements-docs.txt`, then run `mkdocs build --strict` from the repository root.
+Pull requests build the documentation for validation without publishing it.
+Successful Documentation workflow builds on `main` publish directly to
+<https://richardcsuwandi.github.io/kernaut/> through GitHub Pages.
+You can also run the workflow manually on `main` to redeploy.
+The personal website repository does not need a copy of the generated documentation.
+
 ## Add a task, model, or baseline
 
 Follow [docs/extensions.md](docs/extensions.md). Prefer a separate extension package when the
