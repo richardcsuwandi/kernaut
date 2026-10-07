@@ -81,7 +81,7 @@ An agent discovered the **dual warp-fold (DWF)** kernel on the black-box optimiz
 DWF combines a gentle warp with a triangular fold of each input coordinate. The fold maps mirrored inputs to the same feature value, while the warp keeps them distinguishable.
 
 <p align="center">
-  <img src="assets/dwf-geometry.png" alt="The warp and fold of the discovered DWF kernel" width="100%">
+  <img src="assets/dwf-geometry.png" alt="The warp and fold of the discovered DWF kernel" width="55%">
 </p>
 
 *The gentle warp and triangular fold used by DWF.*
@@ -91,10 +91,10 @@ DWF applies a Matérn-5/2 kernel to this discovered representation, so similarit
 Because the discovered kernel programs are short and interpretable, they invite human–AI collaboration: researchers can understand the agent's proposal and refine its assumptions. For DWF, we separated the warp and fold into additive kernel components, strengthening the connection between mirrored inputs. This human-refined version reduced held-out predictive error by a further 5.7%, showing how an agent's discovery can become a starting point for further model design.
 
 <p align="center">
-  <img src="assets/dwf-prior-samples.png" alt="Prior samples from Matérn-5/2, DWF, and the additive refinement" width="100%">
+  <img src="assets/dwf-prior-samples.png" alt="Prior samples from Matérn-5/2 and DWF" width="100%">
 </p>
 
-*Functions sampled before fitting data: (a) Matérn-5/2, (b) DWF, and (c) the human refinement. DWF samples have visible corners at the fold.*
+*Functions sampled before fitting data: (a) Matérn-5/2 and (b) DWF. DWF samples have visible corners at the fold.*
 
 Try the [black-box optimization benchmark](docs/tasks.md#black-box-optimization), or see the [paper](#citation) for the full analysis.
 
